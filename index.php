@@ -1,4 +1,4 @@
-<?php include('db_connect.php'); ?>
+<?php session_start(); include('db_connect.php'); ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -166,9 +166,20 @@
           <a class="nav-link" href="#transaction-section">Transactions</a>
         </li>
         <li class="nav-item">
-  <a class="nav-link text-danger fw-bold" href="admin.php" target="_blank">Admin Dashboard</a>
-</li>
-
+          <a class="nav-link" href="mca.php" target="_blank">MCA eConsultation</a>
+        </li>
+        <?php if (!empty($_SESSION['official_logged_in'])): ?>
+          <li class="nav-item">
+            <a class="nav-link text-success fw-bold" href="dashboard.php">Official Dashboard</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="logout.php">Logout</a>
+          </li>
+        <?php else: ?>
+          <li class="nav-item">
+            <a class="nav-link" href="login.php">Official Login</a>
+          </li>
+        <?php endif; ?>
       </ul>
     </div>
   </div>
