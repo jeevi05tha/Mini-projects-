@@ -301,6 +301,80 @@
     .list-item a { font-weight: 600; color: #0f172a; }
     .list-item a:hover { color: var(--mca-blue-2); }
 
+    /* E-Consultation */
+    .econsult .ec-filters {
+      background: #fff;
+      border: 1px solid var(--mca-border);
+      border-radius: 14px;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .econsult .ec-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    .econsult input#ec-search {
+      flex: 2 1 360px;
+      border: 1px solid var(--mca-border);
+      border-radius: 10px;
+      padding: 0.65rem 0.8rem;
+      font-size: 1rem;
+    }
+    .econsult select#ec-category, .econsult select#ec-sort {
+      flex: 0 1 200px;
+      border: 1px solid var(--mca-border);
+      border-radius: 10px;
+      padding: 0.6rem 0.8rem;
+      background: #fff;
+    }
+    .consult-grid {
+      display: grid; grid-template-columns: repeat(12, 1fr); gap: 0.9rem;
+    }
+    .consult-card {
+      grid-column: span 6;
+      background: #fff;
+      border: 1px solid var(--mca-border);
+      border-radius: 14px;
+      padding: 1rem;
+      display: grid; gap: 0.5rem;
+    }
+    .consult-card .consult-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .consult-card h3 { margin: 0; font-size: 1.05rem; color: #0f172a; }
+    .consult-card p { margin: 0; color: #475569; }
+    .consult-card .tags { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .tag { display: inline-flex; align-items: center; padding: 0.18rem 0.5rem; border-radius: 999px; background: #eef2ff; color: #3730a3; font-weight: 700; font-size: 0.8rem; }
+    .badge { display: inline-flex; align-items: center; padding: 0.25rem 0.5rem; border-radius: 999px; font-weight: 700; font-size: 0.8rem; }
+    .badge.open { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .badge.closed { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+    .badge.warn { background: #fff7ed; color: #9a3412; border: 1px solid #ffedd5; }
+    .consult-card .consult-foot { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+    .consult-card .btns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+    /* Modal */
+    .ec-overlay {
+      position: fixed; inset: 0; background: rgba(2,6,23,0.45);
+      opacity: 0; visibility: hidden; transition: opacity .15s ease; z-index: 999;
+    }
+    .ec-overlay.show { opacity: 1; visibility: visible; }
+    .ec-modal {
+      position: fixed; inset: auto 0 0 0; margin: auto; top: 6vh; max-height: 88vh; overflow: auto;
+      width: min(820px, 92vw); background: #fff; border: 1px solid var(--mca-border);
+      border-radius: 16px; box-shadow: 0 24px 60px rgba(2,6,23,0.2); z-index: 1000;
+      opacity: 0; visibility: hidden; transform: translateY(8px); transition: all .2s ease;
+    }
+    .ec-modal.show { opacity: 1; visibility: visible; transform: translateY(0); }
+    .ec-modal-header { display: flex; align-items: start; justify-content: space-between; gap: 0.5rem; padding: 1rem 1rem 0 1rem; }
+    .ec-modal-header h3 { margin: 0; font-size: 1.2rem; color: #0f172a; }
+    .ec-modal-content { padding: 0.5rem 1rem 1rem; display: grid; gap: 0.75rem; }
+    .ec-meta { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .ec-modal form { display: grid; gap: 0.6rem; }
+    .ec-modal form label { display: grid; gap: 0.35rem; font-weight: 600; color: #0f172a; }
+    .ec-modal input[type="text"], .ec-modal input[type="email"], .ec-modal textarea {
+      border: 1px solid var(--mca-border); border-radius: 10px; padding: 0.6rem 0.75rem; font-size: 1rem;
+    }
+    .ec-modal .check { display: flex; align-items: center; gap: 0.5rem; }
+
+    @media (max-width: 920px) {
+      .consult-card { grid-column: span 12; }
+    }
+
     /* Footer */
     .footer {
       background: linear-gradient(180deg, #f9fbff, #f3f6fb);
@@ -470,7 +544,7 @@
           <div class="submenu" role="menu">
             <a href="#" role="menuitem">MCA Labs</a>
             <a href="#" role="menuitem">Help & FAQs</a>
-            <a href="#" role="menuitem">e-Consultation</a>
+            <a href="#econsultation" role="menuitem">e-Consultation</a>
           </div>
         </li>
         <li class="nav-item" role="none">
@@ -512,7 +586,7 @@
           <div class="mobile-submenu">
             <a href="#">MCA Labs</a>
             <a href="#">Help & FAQs</a>
-            <a href="#">e-Consultation</a>
+            <a href="#econsultation">e-Consultation</a>
           </div>
         </details>
         <a class="pill" style="margin:0.5rem 0 0.75rem; width:fit-content" href="#">Contact</a>
@@ -541,6 +615,7 @@
           <a class="pill" href="#">Company Filing</a>
           <a class="pill" href="#">Name Reservation</a>
           <a class="pill" href="#">MCA Login</a>
+          <a class="pill" href="#econsultation">e-Consultation</a>
         </div>
       </div>
     </div>
@@ -666,6 +741,93 @@
     </div>
   </section>
 
+  <!-- e-Consultation -->
+  <section id="econsultation" class="section econsult" aria-labelledby="ec-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="ec-title" class="section-title">e-Consultation</h2>
+        <div class="section-sub">Participate in public consultations on draft rules, policies, and forms</div>
+      </div>
+
+      <div class="ec-filters" role="search" aria-label="Filter consultations">
+        <div class="ec-row">
+          <input id="ec-search" type="search" placeholder="Search consultations, topics, rule names…" aria-label="Search consultations" />
+          <select id="ec-category" aria-label="Filter by category">
+            <option value="">All categories</option>
+            <option value="Companies Act">Companies Act</option>
+            <option value="LLP">LLP</option>
+            <option value="Policy">Policy</option>
+            <option value="Forms">Forms</option>
+          </select>
+          <select id="ec-sort" aria-label="Sort by">
+            <option value="recent">Most recent</option>
+            <option value="closing">Closing soon</option>
+            <option value="title">Title A–Z</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tabs" data-ec-tabs>
+        <div class="tablist" role="tablist" aria-label="e-Consultation tabs">
+          <button class="tab" data-ec-tab="open" aria-selected="true">Open</button>
+          <button class="tab" data-ec-tab="closed" aria-selected="false">Closed</button>
+          <button class="tab" data-ec-tab="mine" aria-selected="false">My Submissions</button>
+        </div>
+        <div class="ec-panels">
+          <div class="ec-panel active" data-ec-panel="open">
+            <div id="ec-open-list" class="consult-grid"></div>
+          </div>
+          <div class="ec-panel" data-ec-panel="closed">
+            <div id="ec-closed-list" class="consult-grid"></div>
+          </div>
+          <div class="ec-panel" data-ec-panel="mine">
+            <div id="ec-mine-list" class="consult-grid"></div>
+            <p class="muted" id="ec-mine-empty">No submissions yet.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- e-Consultation Modal -->
+  <div class="ec-overlay" id="ec-overlay" hidden></div>
+  <div class="ec-modal" id="ec-modal" role="dialog" aria-modal="true" aria-labelledby="ec-modal-title" hidden>
+    <div class="ec-modal-header">
+      <h3 id="ec-modal-title">Consultation</h3>
+      <button class="btn ghost" id="ec-modal-close" aria-label="Close">✕</button>
+    </div>
+    <div class="ec-modal-content">
+      <p id="ec-modal-summary" class="muted"></p>
+      <div id="ec-modal-tags" class="tags"></div>
+      <div class="ec-meta">
+        <span class="badge warn" id="ec-modal-status">Open</span>
+        <span class="muted">Closes: <span id="ec-modal-closes"></span></span>
+      </div>
+      <a id="ec-modal-doc" class="pill" href="#" target="_blank" rel="noopener">Download draft</a>
+      <hr />
+      <form id="ec-form">
+        <label>Full name
+          <input type="text" name="name" required />
+        </label>
+        <label>Email (optional)
+          <input type="email" name="email" />
+        </label>
+        <label>Feedback
+          <textarea name="feedback" rows="5" required></textarea>
+        </label>
+        <div class="check">
+          <input type="checkbox" id="ec-consent" name="consent" required />
+          <label for="ec-consent">I agree to publish my feedback publicly.</label>
+        </div>
+        <input type="hidden" name="consultationId" id="ec-form-id" />
+        <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+          <button class="btn primary" type="submit">Submit feedback</button>
+          <span class="muted" id="ec-form-status" role="status"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="footer" role="contentinfo">
     <div class="container footer-inner">
@@ -685,7 +847,7 @@
             <li><a href="#">MCA21 V3 Portal</a></li>
             <li><a href="#">Company Master Data</a></li>
             <li><a href="#">Public Documents</a></li>
-            <li><a href="#">e-Consultation</a></li>
+            <li><a href="#econsultation">e-Consultation</a></li>
           </ul>
         </div>
         <div class="fcol">
