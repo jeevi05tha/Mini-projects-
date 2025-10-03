@@ -527,6 +527,21 @@
                 </select>
                 <span id="sttStatus" class="small muted">STT: Off</span>
               </div>
+
+              <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label class="small muted" style="display:flex; align-items:center; gap:6px;">
+                  <input type="checkbox" id="useCloudSTT" /> Cloud English (API)
+                </label>
+                <span id="cloudSttStatus" class="small muted">Cloud: Off</span>
+              </div>
+              <div id="cloudCfg" style="display:none; margin-top:8px;">
+                <input id="transcribeEndpoint" class="input" placeholder="Transcribe API endpoint (POST)" />
+                <input id="transcribeApiKey" class="input" placeholder="Bearer token (optional)" style="margin-top:8px;" />
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                  <button class="btn ghost" id="saveTranscribeCfgBtn">Save API Settings</button>
+                </div>
+                <div class="small muted" style="margin-top:6px;">Expected response: { text_en: "..." } or { text: "..." }</div>
+              </div>
             </div>
 
             <div class="card" style="padding:14px;">
@@ -1234,6 +1249,7 @@
     let sttRecognition = null;
     let sttActive = false;
     let sttPartial = '';
+    let cloudCfg = { endpoint: localStorage.getItem('transcribeEndpoint')||'', apiKey: localStorage.getItem('transcribeApiKey')||'' };
 
     function setRecUI(state){
       if(recStatus){ recStatus.textContent = state; }
@@ -1266,6 +1282,11 @@
             ashaQueue.unshift(item);
             persistAll();
             renderAshaQueue();
+            // If cloud STT is enabled, send for transcription to English
+            const useCloud = document.getElementById('useCloudSTT');
+            if(useCloud && useCloud.checked){
+              transcribeWithCloud(item).catch(()=>{});
+            }
           };
           reader.readAsDataURL(blob);
           if(mediaStream){ mediaStream.getTracks().forEach(t => t.stop()); }
@@ -1334,6 +1355,66 @@
 
     if(startRecBtn) startRecBtn.addEventListener('click', startRecording);
     if(stopRecBtn) stopRecBtn.addEventListener('click', stopRecording);
+
+    // Cloud STT config handlers
+    const useCloudSTTEl = document.getElementById('useCloudSTT');
+    const cloudCfgEl = document.getElementById('cloudCfg');
+    const saveCfgBtn = document.getElementById('saveTranscribeCfgBtn');
+    const endpointEl = document.getElementById('transcribeEndpoint');
+    const apiKeyEl = document.getElementById('transcribeApiKey');
+    const cloudSttStatus = document.getElementById('cloudSttStatus');
+    if(endpointEl) endpointEl.value = cloudCfg.endpoint;
+    if(apiKeyEl) apiKeyEl.value = cloudCfg.apiKey;
+    if(useCloudSTTEl){
+      useCloudSTTEl.addEventListener('change', ()=>{
+        const on = !!useCloudSTTEl.checked;
+        cloudCfgEl.style.display = on ? 'block' : 'none';
+        if(cloudSttStatus) cloudSttStatus.textContent = on ? 'Cloud: Ready' : 'Cloud: Off';
+      });
+    }
+    if(saveCfgBtn){
+      saveCfgBtn.addEventListener('click', ()=>{
+        cloudCfg.endpoint = (endpointEl && endpointEl.value || '').trim();
+        cloudCfg.apiKey = (apiKeyEl && apiKeyEl.value || '').trim();
+        localStorage.setItem('transcribeEndpoint', cloudCfg.endpoint);
+        localStorage.setItem('transcribeApiKey', cloudCfg.apiKey);
+        toast('Transcription API settings saved.','success');
+      });
+    }
+
+    async function transcribeWithCloud(queueItem){
+      try{
+        if(!cloudCfg.endpoint){ toast('Set Transcribe API endpoint first.','warn'); return; }
+        const cloudSttStatus = document.getElementById('cloudSttStatus');
+        if(cloudSttStatus) cloudSttStatus.textContent = 'Cloud: Uploading…';
+        // Send base64 payload to API
+        const res = await fetch(cloudCfg.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(cloudCfg.apiKey ? { 'Authorization': `Bearer ${cloudCfg.apiKey}` } : {})
+          },
+          body: JSON.stringify({ audio_base64: queueItem.audioBase64, target_lang: 'en' })
+        });
+        if(!res.ok){ throw new Error('Bad response'); }
+        const data = await res.json();
+        const text = data.text_en || data.text || '';
+        if(!text){ throw new Error('No text in response'); }
+        // Update item transcription
+        const idx = ashaQueue.findIndex(q => q.id === queueItem.id);
+        if(idx !== -1){
+          ashaQueue[idx].transcribedText = text;
+          persistAll();
+          renderAshaQueue();
+          toast('Cloud transcription completed.','success');
+        }
+      } catch(err){
+        toast('Cloud transcription failed.','error');
+      } finally {
+        const cloudSttStatus2 = document.getElementById('cloudSttStatus');
+        if(cloudSttStatus2) cloudSttStatus2.textContent = 'Cloud: Ready';
+      }
+    }
 
     function renderAshaQueue(){
       if(!queueList) return;
