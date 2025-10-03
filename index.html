@@ -542,6 +542,21 @@
                 </div>
                 <div class="small muted" style="margin-top:6px;">Expected response: { text_en: "..." } or { text: "..." }</div>
               </div>
+
+              <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label class="small muted" style="display:flex; align-items:center; gap:6px;">
+                  <input type="checkbox" id="useTranslate" /> Translate transcription to English (API)
+                </label>
+                <span id="translateStatus" class="small muted">Translate: Off</span>
+              </div>
+              <div id="translateCfg" style="display:none; margin-top:8px;">
+                <input id="translateEndpoint" class="input" placeholder="Translate API endpoint (POST)" />
+                <input id="translateApiKey" class="input" placeholder="Bearer token (optional)" style="margin-top:8px;" />
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                  <button class="btn ghost" id="saveTranslateCfgBtn">Save Translate Settings</button>
+                </div>
+                <div class="small muted" style="margin-top:6px;">Request: { text: "...", target_lang: "en" } → Response { text: "..." }</div>
+              </div>
             </div>
 
             <div class="card" style="padding:14px;">
@@ -1250,6 +1265,7 @@
     let sttActive = false;
     let sttPartial = '';
     let cloudCfg = { endpoint: localStorage.getItem('transcribeEndpoint')||'', apiKey: localStorage.getItem('transcribeApiKey')||'' };
+    let translateCfg = { endpoint: localStorage.getItem('translateEndpoint')||'', apiKey: localStorage.getItem('translateApiKey')||'' };
 
     function setRecUI(state){
       if(recStatus){ recStatus.textContent = state; }
@@ -1282,7 +1298,7 @@
             ashaQueue.unshift(item);
             persistAll();
             renderAshaQueue();
-            // If cloud STT is enabled, send for transcription to English
+            // If cloud STT is enabled, send for transcription; optionally translate to English
             const useCloud = document.getElementById('useCloudSTT');
             if(useCloud && useCloud.checked){
               transcribeWithCloud(item).catch(()=>{});
@@ -1356,15 +1372,23 @@
     if(startRecBtn) startRecBtn.addEventListener('click', startRecording);
     if(stopRecBtn) stopRecBtn.addEventListener('click', stopRecording);
 
-    // Cloud STT config handlers
+    // Cloud STT and Translate config handlers
     const useCloudSTTEl = document.getElementById('useCloudSTT');
     const cloudCfgEl = document.getElementById('cloudCfg');
     const saveCfgBtn = document.getElementById('saveTranscribeCfgBtn');
     const endpointEl = document.getElementById('transcribeEndpoint');
     const apiKeyEl = document.getElementById('transcribeApiKey');
     const cloudSttStatus = document.getElementById('cloudSttStatus');
+    const useTranslateEl = document.getElementById('useTranslate');
+    const translateCfgEl = document.getElementById('translateCfg');
+    const translateEndpointEl = document.getElementById('translateEndpoint');
+    const translateApiKeyEl = document.getElementById('translateApiKey');
+    const saveTranslateCfgBtn = document.getElementById('saveTranslateCfgBtn');
+    const translateStatusEl = document.getElementById('translateStatus');
     if(endpointEl) endpointEl.value = cloudCfg.endpoint;
     if(apiKeyEl) apiKeyEl.value = cloudCfg.apiKey;
+    if(translateEndpointEl) translateEndpointEl.value = translateCfg.endpoint;
+    if(translateApiKeyEl) translateApiKeyEl.value = translateCfg.apiKey;
     if(useCloudSTTEl){
       useCloudSTTEl.addEventListener('change', ()=>{
         const on = !!useCloudSTTEl.checked;
@@ -1379,6 +1403,22 @@
         localStorage.setItem('transcribeEndpoint', cloudCfg.endpoint);
         localStorage.setItem('transcribeApiKey', cloudCfg.apiKey);
         toast('Transcription API settings saved.','success');
+      });
+    }
+    if(useTranslateEl){
+      useTranslateEl.addEventListener('change', ()=>{
+        const on = !!useTranslateEl.checked;
+        translateCfgEl.style.display = on ? 'block' : 'none';
+        if(translateStatusEl) translateStatusEl.textContent = on ? 'Translate: Ready' : 'Translate: Off';
+      });
+    }
+    if(saveTranslateCfgBtn){
+      saveTranslateCfgBtn.addEventListener('click', ()=>{
+        translateCfg.endpoint = (translateEndpointEl && translateEndpointEl.value || '').trim();
+        translateCfg.apiKey = (translateApiKeyEl && translateApiKeyEl.value || '').trim();
+        localStorage.setItem('translateEndpoint', translateCfg.endpoint);
+        localStorage.setItem('translateApiKey', translateCfg.apiKey);
+        toast('Translate API settings saved.','success');
       });
     }
 
@@ -1398,8 +1438,29 @@
         });
         if(!res.ok){ throw new Error('Bad response'); }
         const data = await res.json();
-        const text = data.text_en || data.text || '';
+        let text = data.text_en || data.text || '';
         if(!text){ throw new Error('No text in response'); }
+
+        // If translate is enabled and response isn't English, translate to English
+        if(useTranslateEl && useTranslateEl.checked){
+          try{
+            if(!translateCfg.endpoint){ throw new Error('missing translate endpoint'); }
+            if(translateStatusEl) translateStatusEl.textContent = 'Translate: Processing…';
+            const tRes = await fetch(translateCfg.endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(translateCfg.apiKey ? { 'Authorization': `Bearer ${translateCfg.apiKey}` } : {})
+              },
+              body: JSON.stringify({ text, target_lang: 'en' })
+            });
+            const tJson = await tRes.json();
+            if(tRes.ok && (tJson.text || tJson.text_en)){
+              text = tJson.text || tJson.text_en;
+            }
+          } catch {}
+        }
+
         // Update item transcription
         const idx = ashaQueue.findIndex(q => q.id === queueItem.id);
         if(idx !== -1){
@@ -1413,6 +1474,7 @@
       } finally {
         const cloudSttStatus2 = document.getElementById('cloudSttStatus');
         if(cloudSttStatus2) cloudSttStatus2.textContent = 'Cloud: Ready';
+        if(translateStatusEl) translateStatusEl.textContent = useTranslateEl && useTranslateEl.checked ? 'Translate: Ready' : 'Translate: Off';
       }
     }
 
