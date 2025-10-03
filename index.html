@@ -371,7 +371,7 @@
       <div class="logo">M</div>
       <div>
         <div class="site-title">Manobhava</div>
-        <div class="small muted">AI-assisted e-Consultation (demo)</div>
+        <div class="small muted">AI-assisted e‑Consultation</div>
       </div>
     </div>
 
@@ -386,7 +386,7 @@
       <span id="roleBadge" class="role-badge" style="display:none;"></span>
       <button class="btn ghost" id="demoLoginBtn">Login</button>
       <button class="btn ghost" id="logoutBtn" style="display:none;">Logout</button>
-      <button class="btn" id="ctaDemo">Try Demo</button>
+      <button class="btn" id="ctaDemo">Get Started</button>
     </div>
   </header>
 
@@ -394,11 +394,11 @@
     <!-- Top Intro -->
     <section id="home-view" class="card">
       <h1 class="title">Manobhava — Transparent & efficient public consultation</h1>
-      <p class="lead">An AI-first demo prototype to help regulators process public comments: collect submissions, analyze sentiment, and summarize themes with a word cloud and sentiment distribution to speed decision making.</p>
+      <p class="lead">Collect submissions from citizens and ASHA workers, analyze sentiment and keywords, and empower officials with clear insights for decisions.</p>
       <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
-        <button class="btn" data-view-link="consult">Go to e-Consultation</button>
-        <button class="btn ghost" data-view-link="dashboard">Open Dashboard (demo)</button>
-        <div class="muted" style="margin-left:auto;">MVP — front-end prototype for judges</div>
+        <button class="btn" data-view-link="consult">Go to e‑Consultation</button>
+        <button class="btn ghost" data-view-link="dashboard">Open Dashboard</button>
+        <div class="muted" style="margin-left:auto;">Front‑end MVP</div>
       </div>
       <div class="card" style="margin-top:14px;">
         <h3 style="margin:0 0 8px;">About e‑Consultation — Aims</h3>
@@ -408,10 +408,7 @@
           <li>Analyze at scale with keywords and sentiment distribution</li>
           <li>Provide officials a secure, aggregated decision dashboard</li>
         </ul>
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
-          <button class="btn ghost" id="seedDemoBtn">Seed Demo Data</button>
-          <button class="btn ghost" id="resetDemoBtn">Reset Demo</button>
-        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
       </div>
     </section>
 
@@ -535,9 +532,9 @@
       <!-- right column -->
       <aside class="side">
         <div class="card about">
-          <strong>About Manobhava (demo)</strong>
+          <strong>About Manobhava</strong>
           <div class="small muted" style="margin-top:8px;">
-            A prototype that showcases how regulator feedback can be collected and analyzed quickly. The dashboard is interactive and can be connected to an AI back-end for full production.
+            A solution to collect and analyze regulator feedback quickly. The dashboard is interactive and can be connected to a secure back‑end.
           </div>
           <div style="margin-top:10px;">
             <div class="small muted"><strong>What you can demo:</strong></div>
@@ -554,13 +551,13 @@
           <div style="display:flex;flex-direction:column; gap:8px; margin-top:10px;">
             <div class="small muted">Amendments listed: <strong id="statCount">0</strong></div>
             <div class="small muted">Comments submitted: <strong id="statComments">0</strong></div>
-            <div class="small muted">Demo mode: <strong>Front-end only</strong></div>
+            <div class="small muted">Mode: <strong>Front‑end MVP</strong></div>
           </div>
         </div>
 
         <div class="card" style="padding:14px;">
-          <strong>Judge Notes</strong>
-          <p class="small muted" style="margin-top:8px;">This MVP demonstrates the UI/UX and analysis pipeline. For production, connect submissions to a secure backend and replace the demo sentiment rules with a transformer model (Legal-BERT / custom ensemble).</p>
+          <strong>Notes</strong>
+          <p class="small muted" style="margin-top:8px;">For production, connect submissions to a secure backend and replace the lexicon sentiment with an ML model.</p>
         </div>
       </aside>
     </div>
@@ -609,8 +606,8 @@
   <!-- Login Modal (visual demo only) -->
   <div id="loginModal" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(10,15,20,0.35); z-index:120; align-items:center; justify-content:center;">
     <div class="card" style="width:420px; padding:18px;">
-      <h3 style="margin-top:0">Login to Manobhava (demo)</h3>
-      <div class="muted small">Choose role — Official / ASHA / Citizen (demo only)</div>
+      <h3 style="margin-top:0">Login to Manobhava</h3>
+      <div class="muted small">Choose role — Official / ASHA / Citizen</div>
       <div style="margin-top:12px;">
         <input class="input" id="loginEmail" placeholder="Email" />
         <input class="input" id="loginPass" placeholder="Password" style="margin-top:8px;" />
@@ -1102,10 +1099,11 @@
       toast(`Logged in as ${userRole}.`,'success');
     });
     if(logoutBtn) logoutBtn.addEventListener('click', ()=>{
-      userRole = 'citizen';
+      userRole = 'guest';
       localStorage.setItem('userRole', userRole);
       updateUIForRole();
       showView('home');
+      toast('Logged out.','info');
     });
 
     function updateUIForRole(){
