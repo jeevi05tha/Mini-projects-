@@ -557,6 +557,11 @@
                 </div>
                 <div class="small muted" style="margin-top:6px;">Request: { text: "...", target_lang: "en" } → Response { text: "..." }</div>
               </div>
+
+              <div id="sttPreviewWrap" style="margin-top:10px;">
+                <label class="small muted">Live transcript preview</label>
+                <textarea id="sttPreview" class="input" rows="3" placeholder="Speech-to-text preview..." readonly></textarea>
+              </div>
             </div>
 
             <div class="card" style="padding:14px;">
@@ -1353,6 +1358,8 @@
           // Show last typed text in the last queue draft if any
           const lastTx = document.querySelector('#ashaQueueList .asha-tx');
           if(lastTx && lastTx.value.trim().length === 0){ lastTx.value = sttPartial; }
+          const sttPrev = document.getElementById('sttPreview');
+          if(sttPrev){ sttPrev.value = sttPartial; }
         };
         sttRecognition.onerror = () => { if(sttStatus) sttStatus.textContent = 'STT: Error'; };
         sttRecognition.onend = () => { if(sttStatus) sttStatus.textContent = 'STT: Off'; sttActive = false; };
