@@ -609,8 +609,8 @@
       <h3 style="margin-top:0">Login to Manobhava</h3>
       <div class="muted small">Choose role — Official / ASHA / Citizen</div>
       <div style="margin-top:12px;">
-        <input class="input" id="loginEmail" placeholder="Email" />
-        <input class="input" id="loginPass" placeholder="Password" style="margin-top:8px;" />
+        <input class="input" id="loginEmail" type="email" placeholder="Email" autocomplete="email" required />
+        <input class="input" id="loginPass" type="password" placeholder="Password" style="margin-top:8px;" autocomplete="current-password" required />
         <select class="input" id="loginRole" style="margin-top:8px;">
           <option value="official">Official</option>
           <option value="asha">ASHA Worker</option>
@@ -1092,6 +1092,15 @@
     if(closeLoginBtn) closeLoginBtn.addEventListener('click', ()=> $('#loginModal').style.display = 'none');
     if(loginBtn) loginBtn.addEventListener('click', ()=> {
       const roleSel = document.getElementById('loginRole');
+      const emailEl = document.getElementById('loginEmail');
+      const passEl = document.getElementById('loginPass');
+      const email = (emailEl && emailEl.value || '').trim();
+      const pass = (passEl && passEl.value || '').trim();
+      if(!email || !pass){ toast('Enter email and password.','warn'); return; }
+      // Basic email shape check
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('Enter a valid email.','warn'); return; }
+      if(pass.length < 6){ toast('Password must be at least 6 characters.','warn'); return; }
+
       userRole = (roleSel && roleSel.value) || 'citizen';
       localStorage.setItem('userRole', userRole);
       $('#loginModal').style.display = 'none';
