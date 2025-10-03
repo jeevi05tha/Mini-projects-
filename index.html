@@ -524,6 +524,7 @@
                   <option value="en-IN" selected>English (India)</option>
                   <option value="en-US">English (US)</option>
                   <option value="hi-IN">Hindi (India)</option>
+                  <option value="kn-IN">Kannada (India)</option>
                 </select>
                 <span id="sttStatus" class="small muted">STT: Off</span>
               </div>
@@ -1354,6 +1355,7 @@
             if (event.results[i].isFinal) final += transcript + ' ';
             else interim += transcript + ' ';
           }
+          // For English, directly build partial. For non-English, we still preview raw text; cloud translate will convert to English later.
           sttPartial = (sttPartial + ' ' + final + ' ' + interim).trim().slice(0, 2000);
           // Show last typed text in the last queue draft if any
           const lastTx = document.querySelector('#ashaQueueList .asha-tx');
