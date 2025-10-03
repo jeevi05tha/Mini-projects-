@@ -98,6 +98,7 @@ real-estate-explorer/
 ├── admin.php              # Admin dashboard for management
 ├── db_connect.php         # Database connection configuration
 ├── transaction.php        # Transaction processing script
+├── single.php             # All-in-one single-file app (home/login/dashboard/MCA)
 ├── background.webp        # Hero section background image
 ├── [city-name].jpg        # City-specific images
 └── README.md              # Project documentation
@@ -110,11 +111,24 @@ For Users:
 3. Select Property: Click on a property card to auto-fill the transaction form
 4. Complete Purchase: Fill in your details and submit the transaction
 
-For Administrators:
-1. Access Admin Panel: Navigate to /admin.php
-2. Add Cities: Use the "Add New City" form to add new locations
-3. Add Properties: Use the "Add New Availability" form to list new properties
-4. Monitor Data: View all cities and properties in the dashboard tables
+For Administrators (Official):
+1. Official Login: Navigate to `/login.php` (credentials below)
+2. Official Dashboard: After login, go to `/dashboard.php` to view KPIs and recent transactions
+3. Admin Panel: Manage data at `/admin.php` (unchanged)
+4. Logout: Use `/logout.php`
+
+MCA eConsultation Mirror:
+- Visit `/mca.php` to view the live MCA eConsultation page in-app. Relative links are resolved to the MCA domain via a `<base>` tag.
+
+Single-file Option:
+- Open `single.php` directly. It bundles Home, Login, Official Dashboard, Admin forms, Transactions, and MCA eConsultation mirror in one file.
+- Routes (query params): `single.php?page=home|login|dashboard|mca`; logout via `single.php?action=logout`.
+
+Official Credentials (default):
+```text
+username: official
+password: official123
+```
    
 🔧 Configuration:
 Database Tables:
