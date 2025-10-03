@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Manobhava — e-Consultation MVP</title>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root{
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --accent: #2b7fb6;
+      --accent-2: #2bb38f;
+      --muted: #6b7280;
+      --glass: rgba(255,255,255,0.8);
+      --pill: #cfeaf2;
+      --soft: #eef8f6;
+      --shadow: 0 6px 18px rgba(23,35,60,0.08);
+      --radius: 12px;
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: linear-gradient(180deg, var(--bg), #eef6fb 200px);
+      color:#0f172a;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      min-height:100vh;
+    }
+
+    /* NAV */
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:18px 32px;
+      gap:12px;
+      position:sticky;
+      top:0;
+      background:linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.6));
+      backdrop-filter: blur(6px);
+      border-bottom:1px solid rgba(15,23,42,0.04);
+      z-index:50;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .logo{
+      height:48px;
+      width:48px;
+      border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:600;
+      box-shadow:var(--shadow);
+    }
+    .site-title{
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:0.6px;
+    }
+    nav a{
+      margin:0 10px;
+      color:var(--muted);
+      text-decoration:none;
+      padding:8px 12px;
+      border-radius:8px;
+    }
+    nav a.active, nav a:hover{
+      background:var(--pill);
+      color:var(--accent);
+      font-weight:600;
+    }
+    .right-actions{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .btn{
+      padding:8px 14px;
+      background:var(--accent);
+      color:white;
+      border-radius:10px;
+      border:none;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow: 0 8px 20px rgba(43,127,182,0.18);
+    }
+    .btn.ghost{
+      background:transparent;
+      color:var(--accent);
+      border:1px solid rgba(43,127,182,0.12);
+      box-shadow:none;
+    }
+
+    /* Layout */
+    .container{
+      width:1100px;
+      max-width:94%;
+      margin:28px auto;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap:18px;
+      align-items:start;
+    }
+
+    /* Left main card */
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:20px;
+      box-shadow:var(--shadow);
+    }
+    h1.title{
+      margin:0 0 8px;
+      font-size:22px;
+    }
+    p.lead{
+      margin:0 0 18px;
+      color:var(--muted);
+    }
+
+    /* Amendments list */
+    .amendments{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .amendment{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px;
+      border-radius:10px;
+      border:1px solid rgba(15,23,42,0.04);
+      background:linear-gradient(180deg, #fff, #fbfcff);
+    }
+    .amendment .meta{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+    .amendment .meta .tag{
+      background:var(--soft);
+      padding:6px 10px;
+      border-radius:8px;
+      font-weight:700;
+      color:var(--accent);
+      font-size:13px;
+    }
+    .amendment .meta .title{
+      font-weight:700;
+    }
+    .amendment .date{
+      color:var(--muted);
+      font-size:13px;
+    }
+    .amendment .actions button{
+      margin-left:8px;
+      padding:8px 12px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      background:var(--accent-2);
+      color:white;
+      font-weight:600;
+    }
+
+    /* Right panel: brief + stats */
+    .side{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+    .side .about{
+      padding:16px;
+      border-radius:10px;
+      background: linear-gradient(90deg, rgba(43,127,182,0.06), rgba(43,179,143,0.04));
+    }
+    .small{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    /* Comment drawer (hidden panel) */
+    .drawer{
+      position:fixed;
+      right:20px;
+      top:96px;
+      width:420px;
+      max-width:92%;
+      transform: translateX(110%);
+      transition: transform .32s cubic-bezier(.2,.9,.2,1);
+      z-index:80;
+    }
+    .drawer.open{
+      transform: translateX(0%);
+    }
+    .drawer .card{
+      padding:18px;
+      height:calc(100vh - 160px);
+      overflow:auto;
+    }
+    .input, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid rgba(15,23,42,0.06);
+      font-size:14px;
+      resize:vertical;
+    }
+    .file-input{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top:8px;
+    }
+    .muted{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .analyze-btn{
+      margin-top:12px;
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:none;
+      background:var(--accent);
+      color:white;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    /* Dashboard Section (hidden by default) */
+    #dashboard{
+      margin-top:20px;
+      display:none;
+    }
+    .dash-grid{
+      display:grid;
+      gap:18px;
+      grid-template-columns: 1fr 420px;
+      align-items:start;
+    }
+    .cloud{
+      min-height:360px;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:16px;
+      border-radius:10px;
+      background:linear-gradient(180deg, #fff, #fbfdff);
+      border:1px solid rgba(15,23,42,0.04);
+    }
+
+    /* footer */
+    footer{
+      margin:36px auto;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* small utilities */
+    .center{
+      text-align:center;
+    }
+    .loader{
+      display:inline-block;
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      border:3px solid rgba(0,0,0,0.08);
+      border-top-color:var(--accent);
+      animation:spin 1s linear infinite;
+      vertical-align:middle;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* responsive */
+    @media (max-width:980px){
+      .grid{grid-template-columns:1fr}
+      .dash-grid{grid-template-columns:1fr}
+      .drawer{left:50%; transform:translateX(-50%); right:auto; bottom:12px; top:auto; width:92%}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">M</div>
+      <div>
+        <div class="site-title">Manobhava</div>
+        <div class="small muted">AI-assisted e-Consultation (demo)</div>
+      </div>
+    </div>
+
+    <nav>
+      <a href="#" class="nav-link active" data-view="home">Home</a>
+      <a href="#" class="nav-link" data-view="consult">e-Consultation</a>
+      <a href="#" class="nav-link" data-view="dashboard">Dashboard</a>
+    </nav>
+
+    <div class="right-actions">
+      <button class="btn ghost" id="demoLoginBtn">Login</button>
+      <button class="btn" id="ctaDemo">Try Demo</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Top Intro -->
+    <section id="home-view" class="card">
+      <h1 class="title">Manobhava — Transparent & efficient public consultation</h1>
+      <p class="lead">An AI-first demo prototype to help regulators process public comments: collect submissions, analyze sentiment, and summarize themes with a word cloud and sentiment distribution to speed decision making.</p>
+      <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+        <button class="btn" data-view-link="consult">Go to e-Consultation</button>
+        <button class="btn ghost" data-view-link="dashboard">Open Dashboard (demo)</button>
+        <div class="muted" style="margin-left:auto;">MVP — front-end prototype for judges</div>
+      </div>
+    </section>
+
+    <div class="grid" style="margin-top:18px;">
+      <!-- left column -->
+      <div>
+        <div id="consult-view" class="card" style="display:none;">
+          <h2 style="margin-top:0">e-Consultation — Recent Amendments</h2>
+          <p class="small muted">Click an amendment to add comments and upload supporting files. Submissions are analyzed and reflected in the dashboard.</p>
+
+          <div class="amendments" id="amendmentsList">
+            <!-- Amendments inserted by JS -->
+          </div>
+        </div>
+
+        <div id="dashboard" class="card">
+          <div style="display:flex; gap:12px; align-items:center; justify-content:space-between;">
+            <div>
+              <h2 style="margin:0;">Dashboard</h2>
+              <div class="small muted">Visualization of citizen comments: keywords and sentiment distribution.</div>
+            </div>
+            <div id="filterInfo" class="small muted" style="display:flex; gap:8px; align-items:center;">
+              <label for="amendmentFilter" class="small" style="font-weight:600;">Filter:</label>
+              <select id="amendmentFilter" class="input" style="width:auto; padding:6px 10px;"></select>
+            </div>
+          </div>
+
+          <div class="small" id="filterBadge" style="margin-top:10px; background:var(--pill); color:var(--accent); display:inline-block; padding:4px 10px; border-radius:999px;"></div>
+
+          <div class="dash-grid" style="margin-top:12px;">
+            <div>
+              <div class="card" style="padding:14px;">
+                <h3 style="margin:0 0 8px">Keyword Word Cloud</h3>
+                <div id="wordCloud" class="cloud">
+                  <!-- words generated here -->
+                  <div class="muted center">No data yet. Submit a comment to see word cloud.</div>
+                </div>
+              </div>
+
+              <div class="card" style="margin-top:12px; padding:14px;">
+                <h3 style="margin:0 0 8px">Recent Comments (live)</h3>
+                <div id="recentComments" style="display:flex;flex-direction:column;gap:8px;"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="card" style="padding:14px;">
+                <h3 style="margin:0 0 8px">Sentiment Distribution</h3>
+                <canvas id="sentChart" width="400" height="300"></canvas>
+                <div class="muted center" style="margin-top:8px; font-size:13px;">Positive / Neutral / Negative</div>
+              </div>
+
+              <div class="card" style="margin-top:12px; padding:14px;">
+                <h3 style="margin:0 0 8px">Summary</h3>
+                <div id="summaryText" class="small muted">No analysis yet. Submit comments to generate insights.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- right column -->
+      <aside class="side">
+        <div class="card about">
+          <strong>About Manobhava (demo)</strong>
+          <div class="small muted" style="margin-top:8px;">
+            A prototype that showcases how regulator feedback can be collected and analyzed quickly. The dashboard is interactive and can be connected to an AI back-end for full production.
+          </div>
+          <div style="margin-top:10px;">
+            <div class="small muted"><strong>What you can demo:</strong></div>
+            <ul class="small muted" style="padding-left:18px;margin:8px 0;">
+              <li>Submit comment & file for an amendment</li>
+              <li>Instant demo analysis → word cloud + sentiment chart</li>
+              <li>View recent comments and quick summary</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card" style="padding:14px;">
+          <strong>Quick stats</strong>
+          <div style="display:flex;flex-direction:column; gap:8px; margin-top:10px;">
+            <div class="small muted">Amendments listed: <strong id="statCount">0</strong></div>
+            <div class="small muted">Comments submitted: <strong id="statComments">0</strong></div>
+            <div class="small muted">Demo mode: <strong>Front-end only</strong></div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:14px;">
+          <strong>Judge Notes</strong>
+          <p class="small muted" style="margin-top:8px;">This MVP demonstrates the UI/UX and analysis pipeline. For production, connect submissions to a secure backend and replace the demo sentiment rules with a transformer model (Legal-BERT / custom ensemble).</p>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      © Manobhava — demo prototype • Built for judges & demonstration
+    </footer>
+  </main>
+
+  <!-- Comment Drawer Panel -->
+  <div class="drawer" id="commentDrawer" aria-hidden="true">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 id="drawerTitle" style="margin:0">Add Comment</h3>
+          <div class="muted" id="drawerSub">For amendment</div>
+        </div>
+        <div>
+          <button class="btn ghost" id="closeDrawer">Close</button>
+        </div>
+      </div>
+
+      <hr style="margin:12px 0 14px; border:none; border-top:1px solid rgba(15,23,42,0.04)">
+
+      <label class="small muted">Your name</label>
+      <input id="commentName" class="input" placeholder="e.g., A. Sharma (Citizen)" />
+
+      <label class="small muted" style="margin-top:10px;">Comment</label>
+      <textarea id="commentText" rows="6" class="input" placeholder="Write your feedback here..."></textarea>
+
+      <div class="file-input">
+        <input id="fileUpload" type="file" />
+        <div class="muted small">Upload supporting file (pdf/doc) — optional</div>
+      </div>
+
+      <button class="analyze-btn" id="submitComment">Submit & Analyze</button>
+
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <div class="muted small">Tip: Your comment will be shown on the demo dashboard (no external storage).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal (visual demo only) -->
+  <div id="loginModal" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(10,15,20,0.35); z-index:120; align-items:center; justify-content:center;">
+    <div class="card" style="width:420px; padding:18px;">
+      <h3 style="margin-top:0">Login to Manobhava (demo)</h3>
+      <div class="muted small">Choose role — admin or citizen (demo only)</div>
+      <div style="margin-top:12px;">
+        <input class="input" id="loginEmail" placeholder="Email" />
+        <input class="input" id="loginPass" placeholder="Password" style="margin-top:8px;" />
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn" id="loginBtn">Login</button>
+          <button class="btn ghost" id="closeLogin">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*************
+     * Demo data
+     *************/
+    const demoAmendments = [
+      { id: 'A1', title: 'Draft: Amend Companies Act - Clause 34', date: '2025-09-10' },
+      { id: 'A2', title: 'Draft: New Rules for Corporate Governance', date: '2025-09-22' },
+      { id: 'A3', title: 'Draft: Changes to Annual Filing Requirement', date: '2025-08-30' },
+      { id: 'A4', title: 'Draft: Small Company Threshold Adjustment', date: '2025-09-15' }
+    ];
+
+    // In-memory storage for demo comments
+    let commentsStore = [];
+
+    // Selection state for dashboard filter
+    let selectedAmendmentId = localStorage.getItem('dashboardFilter') || 'all';
+
+    /*************
+     * Helpers
+     *************/
+    function $(sel){ return document.querySelector(sel) }
+    function $all(sel){ return Array.from(document.querySelectorAll(sel)) }
+
+    // Basic tokenizer
+    function tokenize(text){
+      return text
+        .toLowerCase()
+        .replace(/[^\w\s]/g,' ')
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(w => w.trim())
+    }
+
+    // naive sentiment scoring with small lexicon (demo only)
+    const positiveWords = new Set(['good','helpful','support','agree','positive','benefit','fair','transparent','improve','improved','clarify','clarity','effective','efficient','strong','protect','safe']);
+    const negativeWords = new Set(['bad','concern','harm','negative','oppose','against','unfair','expensive','difficult','problem','risk','confusing','remove','reduce','worse','delay']);
+
+    function analyzeSentiment(text){
+      const tokens = tokenize(text);
+      let score = 0;
+      tokens.forEach(t => {
+        if (positiveWords.has(t)) score += 1;
+        if (negativeWords.has(t)) score -= 1;
+      });
+      if (score > 0) return 'Positive';
+      if (score < 0) return 'Negative';
+      return 'Neutral';
+    }
+
+    /*************
+     * Populate amendments list
+     *************/
+    const amendmentsListEl = $('#amendmentsList');
+    function renderAmendments(){
+      if(!amendmentsListEl) return;
+      amendmentsListEl.innerHTML = '';
+      demoAmendments.forEach(am => {
+        const el = document.createElement('div');
+        el.className = 'amendment';
+        el.innerHTML = `
+          <div class="meta">
+            <div class="tag">${am.id}</div>
+            <div>
+              <div class="title">${am.title}</div>
+              <div class="date">${am.date}</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button data-id="${am.id}" class="btn open-comment">Comment</button>
+            <button data-id="${am.id}" class="btn ghost view-comments">View</button>
+          </div>
+        `;
+        amendmentsListEl.appendChild(el);
+      });
+      const statCountEl = $('#statCount');
+      if (statCountEl) statCountEl.textContent = demoAmendments.length;
+    }
+    renderAmendments();
+
+    // Initialize dashboard filter UI
+    function initDashboardFilter(){
+      const selectEl = document.getElementById('amendmentFilter');
+      if(!selectEl) return;
+      selectEl.innerHTML = '';
+      const optAll = new Option('All amendments', 'all');
+      selectEl.add(optAll);
+      demoAmendments.forEach(a => {
+        const label = `${a.id} — ${a.title}`;
+        selectEl.add(new Option(label, a.id));
+      });
+      selectEl.value = selectedAmendmentId;
+      updateFilterBadge();
+      selectEl.addEventListener('change', () => {
+        selectedAmendmentId = selectEl.value || 'all';
+        localStorage.setItem('dashboardFilter', selectedAmendmentId);
+        renderDashboard();
+      });
+    }
+
+    function updateFilterBadge(){
+      const badge = document.getElementById('filterBadge');
+      if(!badge) return;
+      if(selectedAmendmentId === 'all'){
+        badge.textContent = 'Showing: All amendments';
+      } else {
+        const am = demoAmendments.find(a => a.id === selectedAmendmentId);
+        badge.textContent = `Showing: ${am ? am.id + ' — ' + am.title : selectedAmendmentId}`;
+      }
+    }
+
+    initDashboardFilter();
+
+    /*************
+     * Drawer open/close
+     *************/
+    let currentAmendment = null;
+    function openDrawer(am){
+      currentAmendment = am;
+      $('#commentDrawer').classList.add('open');
+      $('#drawerTitle').textContent = `Add comment — ${am.title}`;
+      $('#drawerSub').textContent = am.date;
+      $('#commentText').value = '';
+      $('#commentName').value = '';
+      $('#fileUpload').value = '';
+      document.getElementById('commentDrawer').setAttribute('aria-hidden','false');
+    }
+    function closeDrawer(){
+      currentAmendment = null;
+      $('#commentDrawer').classList.remove('open');
+      document.getElementById('commentDrawer').setAttribute('aria-hidden','true');
+    }
+
+    document.addEventListener('click', (e)=>{
+      const openBtn = e.target.closest && e.target.closest('.open-comment');
+      const viewBtn = e.target.closest && e.target.closest('.view-comments');
+      if(openBtn){
+        const id = openBtn.dataset.id;
+        const am = demoAmendments.find(a=>a.id===id);
+        openDrawer(am);
+      }
+      if(viewBtn){
+        const id = viewBtn.dataset.id;
+        const thisComments = commentsStore.filter(c=>c.amendId===id);
+        showCommentsModal(id, thisComments);
+      }
+    });
+    const closeDrawerBtn = $('#closeDrawer');
+    if(closeDrawerBtn) closeDrawerBtn.addEventListener('click', closeDrawer);
+
+    /*************
+     * Submit & analyze
+     *************/
+    const submitBtn = $('#submitComment');
+    if(submitBtn) submitBtn.addEventListener('click', ()=> {
+      const name = ($('#commentName').value || '').trim() || 'Anonymous';
+      const text = ($('#commentText').value || '').trim();
+      const file = $('#fileUpload').files && $('#fileUpload').files[0] ? $('#fileUpload').files[0].name : null;
+
+      if(!currentAmendment){ alert('No amendment selected'); return; }
+      if(!text){ alert('Please write a comment before submitting.'); return; }
+
+      const btn = $('#submitComment');
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span class="loader"></span> Analyzing...`;
+      btn.disabled = true;
+
+      setTimeout(()=> {
+        const sentiment = analyzeSentiment(text);
+        const record = {
+          id: 'C' + Math.floor(Math.random()*90000+10000),
+          name, text, file, sentiment,
+          amendId: currentAmendment.id,
+          amendTitle: currentAmendment.title,
+          date: new Date().toISOString().slice(0,10)
+        };
+        commentsStore.unshift(record);
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        closeDrawer();
+
+        // increment stat
+        const statCommentsEl = $('#statComments');
+        if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
+
+        // Set dashboard filter to the current amendment and persist
+        selectedAmendmentId = currentAmendment.id;
+        localStorage.setItem('dashboardFilter', selectedAmendmentId);
+        const selectEl = document.getElementById('amendmentFilter');
+        if(selectEl) selectEl.value = selectedAmendmentId;
+
+        // Navigate to dashboard and render
+        showView('dashboard');
+        renderDashboard();
+      }, 900);
+    });
+
+    /*************
+     * Dashboard rendering
+     *************/
+    let sentChart = null;
+    function renderDashboard(){
+      updateFilterBadge();
+
+      const isAll = selectedAmendmentId === 'all';
+      const filtered = isAll ? commentsStore : commentsStore.filter(c => c.amendId === selectedAmendmentId);
+
+      // show recent comments
+      const recent = $('#recentComments');
+      if(recent){
+        recent.innerHTML = '';
+        if(filtered.length === 0){
+          recent.innerHTML = `<div class="muted">No comments for selected filter yet.</div>`;
+        } else {
+          filtered.slice(0,6).forEach(c=>{
+            const d = document.createElement('div');
+            d.style.padding='10px';
+            d.style.borderRadius='8px';
+            d.style.border='1px solid rgba(15,23,42,0.04)';
+            d.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
+                            <div style="font-weight:700">${c.name}</div>
+                            <div style="font-size:12px;color:#6b7280">${c.date}</div>
+                          </div>
+                          <div style="margin-top:6px;color:#0f172a">${c.text.slice(0,140)}${c.text.length>140?'...':''}</div>
+                          <div style="margin-top:8px;font-size:13px;color:#475569">Sentiment: <strong>${c.sentiment}</strong>${c.file? ' • File attached' : ''}</div>`;
+            recent.appendChild(d);
+          });
+        }
+      }
+
+      // generate word counts from filtered comments
+      const allText = filtered.map(c=>c.text).join(' ');
+      const stopwords = new Set(['the','and','for','with','that','this','have','will','are','shall','may','also','from','been','was','were','but','not','company','rule','clause','amendment','section','new','draft','provision','into','such','its','thereof','herein','hereby','under','over','per']);
+      const tokens = tokenize(allText).filter(w => w.length>2 && !stopwords.has(w));
+      const counts = {};
+      tokens.forEach(t => { counts[t] = (counts[t]||0)+1 });
+
+      // build word cloud (simple)
+      const cloud = $('#wordCloud');
+      if(cloud){
+        cloud.innerHTML = '';
+        const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,50);
+        if(entries.length === 0){
+          cloud.innerHTML = '<div class="muted center">No keywords for selected filter yet.</div>';
+        } else {
+          const maxCount = entries[0][1];
+          entries.forEach(([word, cnt]) => {
+            const span = document.createElement('span');
+            const size = Math.round(14 + (cnt / maxCount) * 26); // 14px to 40px
+            span.textContent = word;
+            span.style.fontSize = size + 'px';
+            span.style.padding = '4px 6px';
+            span.style.cursor = 'default';
+            span.style.userSelect = 'none';
+            span.style.opacity = 0.95;
+            span.title = `${cnt} occurrence${cnt>1?'s':''}`;
+            cloud.appendChild(span);
+          });
+        }
+      }
+
+      // sentiment distribution
+      const countsSent = { Positive:0, Neutral:0, Negative:0 };
+      filtered.forEach(c => { countsSent[c.sentiment] = (countsSent[c.sentiment]||0)+1 });
+
+      const total = filtered.length || 1;
+      const posPct = Math.round((countsSent.Positive/total)*100);
+      const neuPct = Math.round((countsSent.Neutral/total)*100);
+      const negPct = Math.round((countsSent.Negative/total)*100);
+
+      const ctxEl = document.getElementById('sentChart');
+      if(ctxEl){
+        const ctx = ctxEl.getContext('2d');
+        if(sentChart) sentChart.destroy();
+        sentChart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels: ['Positive', 'Neutral', 'Negative'],
+            datasets: [{
+              data: [countsSent.Positive, countsSent.Neutral, countsSent.Negative],
+              backgroundColor: ['#2bb38f','#cfeaf2','#ff7a7a'],
+              hoverOffset: 8,
+              borderWidth:0
+            }]
+          },
+          options: {
+            plugins: {
+              legend: { position:'bottom' },
+              tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} (${Math.round((ctx.parsed/total)*100)}%)` } }
+            }
+          }
+        });
+      }
+
+      // summary text (simple heuristics)
+      let summary = 'No clear trend.';
+      const summaryEl = $('#summaryText');
+      if(summaryEl){
+        if(filtered.length){
+          if(posPct >= negPct + 10) summary = `Overall sentiment is positive (${posPct}% positive). Consider fast-tracking the friendly suggestions.`;
+          else if(negPct >= posPct + 10) summary = `Overall sentiment leans negative (${negPct}% negative). Review concerns and consider revisions.`;
+          else summary = `Mixed/neutral response (P:${posPct}% N:${negPct}%). Consider detailed review of top keywords and targeted clarifications.`;
+        } else {
+          summary = 'No comments for selected filter yet.';
+        }
+        summaryEl.textContent = summary;
+      }
+    }
+
+    /*************
+     * Show different views (home, consult, dashboard)
+     *************/
+    function showView(view){
+      // hide all view areas
+      const homeEl = $('#home-view');
+      const consultEl = $('#consult-view');
+      const dashEl = $('#dashboard');
+      if(homeEl) homeEl.style.display = view === 'home' ? 'block' : 'none';
+      if(consultEl) consultEl.style.display = view === 'consult' ? 'block' : 'none';
+      if(dashEl) dashEl.style.display = view === 'dashboard' ? 'block' : 'none';
+
+      // update nav active
+      $all('.nav-link').forEach(a => {
+        a.classList.toggle('active', a.dataset.view === view);
+      });
+
+      if(view === 'dashboard'){
+        initDashboardFilter();
+        renderDashboard();
+      }
+    }
+
+    // initial
+    showView('home');
+
+    // nav links
+    $all('[data-view-link]').forEach(btn => btn.addEventListener('click', ()=> showView(btn.dataset.viewLink)));
+    $all('.nav-link').forEach(a => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      showView(a.dataset.view);
+    }));
+
+    // Try Demo CTA — scroll to consultation and open first amendment
+    const ctaDemoBtn = $('#ctaDemo');
+    if(ctaDemoBtn) ctaDemoBtn.addEventListener('click', ()=>{
+      showView('consult');
+      // open first amendment's drawer for demo
+      setTimeout(()=> openDrawer(demoAmendments[0]), 260);
+    });
+
+    /*************
+     * Show comments modal (simple)
+     *************/
+    function showCommentsModal(id, comments){
+      const am = demoAmendments.find(a=>a.id === id);
+      const modal = document.createElement('div');
+      modal.style.position='fixed';
+      modal.style.left=0; modal.style.top=0; modal.style.right=0; modal.style.bottom=0;
+      modal.style.background='rgba(10,15,20,0.35)';
+      modal.style.zIndex=200;
+      modal.style.display='flex';
+      modal.style.alignItems='center';
+      modal.style.justifyContent='center';
+      const card = document.createElement('div');
+      card.className='card';
+      card.style.width='720px';
+      card.style.maxWidth='94%';
+      card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
+                          <div>
+                            <h3 style="margin:0">${am.title}</h3>
+                            <div class="muted small">${am.date}</div>
+                          </div>
+                          <div><button class="btn ghost close">Close</button></div>
+                        </div>
+                        <hr style="margin:12px 0">
+                        <div id="modalComments" style="display:flex;flex-direction:column; gap:10px; max-height:380px; overflow:auto;"></div>`;
+      modal.appendChild(card);
+      document.body.appendChild(modal);
+
+      const container = card.querySelector('#modalComments');
+      if(comments.length === 0) {
+        container.innerHTML = '<div class="muted">No comments for this amendment yet.</div>';
+      } else {
+        comments.forEach(c => {
+          const d = document.createElement('div');
+          d.style.padding='10px';
+          d.style.borderRadius='8px';
+          d.style.border='1px solid rgba(15,23,42,0.04)';
+          d.innerHTML = `<div style=\"display:flex;justify-content:space-between;align-items:center;\">\n                          <div style=\"font-weight:700\">${c.name}</div>\n                          <div style=\"font-size:12px;color:#6b7280\">${c.date}</div>\n                        </div>\n                        <div style=\"margin-top:6px;color:#0f172a\">${c.text}</div>\n                        <div style=\"margin-top:8px;font-size:13px;color:#475569\">Sentiment: <strong>${c.sentiment}</strong>${c.file? ' • File: ' + c.file : ''}</div>`;
+          container.appendChild(d);
+        });
+      }
+
+      card.querySelector('.close').addEventListener('click', () => modal.remove());
+      modal.addEventListener('click', (ev)=>{ if(ev.target === modal) modal.remove(); });
+    }
+
+    /*************
+     * Login modal handlers (visual)
+     *************/
+    const demoLoginBtn = $('#demoLoginBtn');
+    const closeLoginBtn = $('#closeLogin');
+    const loginBtn = $('#loginBtn');
+    if(demoLoginBtn) demoLoginBtn.addEventListener('click', ()=> $('#loginModal').style.display = 'flex');
+    if(closeLoginBtn) closeLoginBtn.addEventListener('click', ()=> $('#loginModal').style.display = 'none');
+    if(loginBtn) loginBtn.addEventListener('click', ()=> {
+      alert('Demo login — visual only. Use the site without authentication.');
+      $('#loginModal').style.display = 'none';
+    });
+
+    // small improvement: close drawer on ESC
+    document.addEventListener('keydown', e => {
+      if(e.key === 'Escape'){
+        closeDrawer();
+        $('#loginModal').style.display = 'none';
+      }
+    });
+
+    // Example: prefill with sample comments (optional)
+    // Uncomment to start with some demo analysis data:
+    /*
+    commentsStore.push({
+      id:'C1001', name:'R. Patel', text:'This amendment is helpful but may create extra compliance burden. Suggest clearer definitions.', file:null, sentiment:'Neutral', amendId:'A2', date:'2025-09-25', amendTitle:'Draft: New Rules for Corporate Governance'
+    });
+    commentsStore.push({
+      id:'C1002', name:'S. Kumar', text:'I fully support the change, it improves transparency and is beneficial for small companies.', file:null, sentiment:'Positive', amendId:'A1', date:'2025-09-12', amendTitle:'Draft: Amend Companies Act - Clause 34'
+    });
+    $('#statComments').textContent = commentsStore.length;
+    */
+  </script>
+</body>
+</html>
