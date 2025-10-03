@@ -397,7 +397,7 @@
       <p class="lead">Collect submissions from citizens and ASHA workers, analyze sentiment and keywords, and empower officials with clear insights for decisions.</p>
       <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
         <button class="btn" data-view-link="consult">Go to e‑Consultation</button>
-        <button class="btn ghost" data-view-link="dashboard">Open Dashboard</button>
+        <button class="btn ghost" id="heroOpenDashboard" data-view-link="dashboard" style="display:none;">Open Dashboard</button>
         <div class="muted" style="margin-left:auto;">Front‑end MVP</div>
       </div>
       <div class="card" style="margin-top:14px;">
@@ -1097,6 +1097,8 @@
       $('#loginModal').style.display = 'none';
       updateUIForRole();
       toast(`Logged in as ${userRole}.`,'success');
+      const heroBtnLogin = document.getElementById('heroOpenDashboard');
+      if(heroBtnLogin) heroBtnLogin.style.display = (userRole === 'official') ? 'inline-block' : 'none';
     });
     if(logoutBtn) logoutBtn.addEventListener('click', ()=>{
       userRole = 'guest';
@@ -1104,6 +1106,8 @@
       updateUIForRole();
       showView('home');
       toast('Logged out.','info');
+      const heroBtnLogout = document.getElementById('heroOpenDashboard');
+      if(heroBtnLogout) heroBtnLogout.style.display = 'none';
     });
 
     function updateUIForRole(){
