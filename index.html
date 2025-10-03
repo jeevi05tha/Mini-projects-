@@ -330,6 +330,33 @@
     }
     @keyframes spin{to{transform:rotate(360deg)}}
 
+    /* Toasts */
+    #toastContainer{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      z-index: 300;
+    }
+    .toast{
+      padding:10px 12px;
+      border-radius:10px;
+      box-shadow: var(--shadow);
+      background:#fff;
+      border:1px solid rgba(15,23,42,0.06);
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      opacity:0.98;
+    }
+    .toast.success{ border-color: rgba(43,179,143,0.3); background: #eef8f6; }
+    .toast.error{ border-color: rgba(255,122,122,0.35); background: #fff2f2; }
+    .toast.info{ border-color: rgba(43,127,182,0.3); background: #eef6fb; }
+    .toast.warn{ border-color: rgba(245,158,11,0.35); background: #fff7ed; }
+
     /* responsive */
     @media (max-width:980px){
       .grid{grid-template-columns:1fr}
@@ -381,6 +408,10 @@
           <li>Analyze at scale with keywords and sentiment distribution</li>
           <li>Provide officials a secure, aggregated decision dashboard</li>
         </ul>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+          <button class="btn ghost" id="seedDemoBtn">Seed Demo Data</button>
+          <button class="btn ghost" id="resetDemoBtn">Reset Demo</button>
+        </div>
       </div>
     </section>
 
@@ -394,6 +425,7 @@
           <div class="amendments" id="amendmentsList">
             <!-- Amendments inserted by JS -->
           </div>
+          <div class="small muted" style="margin-top:10px;">Characters: <span id="commentCharCount">0</span>/500</div>
         </div>
 
         <div id="dashboard" class="card" style="display:none;">
@@ -450,6 +482,11 @@
                   <button class="btn" id="saveDecisionBtn">Save Notes</button>
                   <span id="decisionSavedMsg" class="small muted" style="display:none;">Saved</span>
                 </div>
+              </div>
+
+              <div id="decisionsListCard" class="card" style="margin-top:12px; padding:14px; display:none;">
+                <h3 style="margin:0 0 8px">Saved Notes</h3>
+                <div id="decisionsList" class="small muted">No notes yet.</div>
               </div>
             </div>
           </div>
@@ -532,6 +569,8 @@
       © Manobhava — demo prototype • Built for judges & demonstration
     </footer>
   </main>
+  <!-- Toast container -->
+  <div id="toastContainer" aria-live="polite"></div>
 
   <!-- Comment Drawer Panel -->
   <div class="drawer" id="commentDrawer" aria-hidden="true">
@@ -593,10 +632,10 @@
      * Demo data
      *************/
     const demoAmendments = [
-      { id: 'A1', title: 'Draft: Amend Companies Act - Clause 34', date: '2025-09-10' },
-      { id: 'A2', title: 'Draft: New Rules for Corporate Governance', date: '2025-09-22' },
-      { id: 'A3', title: 'Draft: Changes to Annual Filing Requirement', date: '2025-08-30' },
-      { id: 'A4', title: 'Draft: Small Company Threshold Adjustment', date: '2025-09-15' }
+      { id: 'A1', title: 'Draft: Amend Companies Act - Clause 34', date: '2025-09-10', desc: 'Clarifies disclosures under Clause 34, aiming to improve transparency while reducing ambiguity for small enterprises.' },
+      { id: 'A2', title: 'Draft: New Rules for Corporate Governance', date: '2025-09-22', desc: 'Updates board independence requirements, whistleblower protections, and reporting standards for listed entities.' },
+      { id: 'A3', title: 'Draft: Changes to Annual Filing Requirement', date: '2025-08-30', desc: 'Streamlines annual return formats and introduces optional digital attestations for MSMEs.' },
+      { id: 'A4', title: 'Draft: Small Company Threshold Adjustment', date: '2025-09-15', desc: 'Revises paid-up capital and turnover thresholds to broaden small company benefits.' }
     ];
 
     // In-memory storage for demo comments
@@ -663,6 +702,7 @@
           <div class="actions">
             <button data-id="${am.id}" class="btn open-comment">Comment</button>
             <button data-id="${am.id}" class="btn ghost view-comments">View</button>
+            <button data-id="${am.id}" class="btn ghost details">Details</button>
           </div>
         `;
         amendmentsListEl.appendChild(el);
@@ -735,6 +775,7 @@
     document.addEventListener('click', (e)=>{
       const openBtn = e.target.closest && e.target.closest('.open-comment');
       const viewBtn = e.target.closest && e.target.closest('.view-comments');
+      const detBtn = e.target.closest && e.target.closest('.details');
       if(openBtn){
         const id = openBtn.dataset.id;
         const am = demoAmendments.find(a=>a.id===id);
@@ -744,6 +785,11 @@
         const id = viewBtn.dataset.id;
         const thisComments = commentsStore.filter(c=>c.amendId===id);
         showCommentsModal(id, thisComments);
+      }
+      if(detBtn){
+        const id = detBtn.dataset.id;
+        const am = demoAmendments.find(a=>a.id===id);
+        if(am) showAmendmentDetails(am);
       }
     });
     const closeDrawerBtn = $('#closeDrawer');
@@ -758,8 +804,9 @@
       const text = ($('#commentText').value || '').trim();
       const file = $('#fileUpload').files && $('#fileUpload').files[0] ? $('#fileUpload').files[0].name : null;
 
-      if(!currentAmendment){ alert('No amendment selected'); return; }
-      if(!text){ alert('Please write a comment before submitting.'); return; }
+      if(!currentAmendment){ toast('No amendment selected','error'); return; }
+      if(!text){ toast('Please write a comment before submitting.','warn'); return; }
+      if(text.length < 20){ toast('Comment too short (min 20 characters).','warn'); return; }
 
       const btn = $('#submitComment');
       const orig = btn.innerHTML;
@@ -795,7 +842,7 @@
           showView('dashboard');
           renderDashboard();
         } else {
-          alert('Comment submitted. Officials can view analysis in their dashboard.');
+          toast('Comment submitted for review.','success');
         }
       }, 900);
     });
@@ -951,12 +998,17 @@
     $all('[data-view-link]').forEach(btn => btn.addEventListener('click', ()=> {
       const dest = btn.dataset.viewLink;
       if(dest === 'consult' && userRole !== 'citizen'){
-        alert('Please login as Citizen to access e-Consultation.');
+        toast('Please login as Citizen to access e‑Consultation.','info');
         $('#loginModal').style.display = 'flex';
         return;
       }
       if(dest === 'dashboard' && userRole !== 'official'){
-        alert('Officials only. Please login as Official.');
+        toast('Officials only. Please login as Official.','info');
+        $('#loginModal').style.display = 'flex';
+        return;
+      }
+      if(dest === 'asha' && userRole !== 'asha'){
+        toast('ASHA app requires ASHA login.','info');
         $('#loginModal').style.display = 'flex';
         return;
       }
@@ -979,7 +1031,7 @@
         showView('consult');
         setTimeout(()=> openDrawer(demoAmendments[0]), 260);
       } else {
-        alert('Please login to continue.');
+        toast('Please login to continue.','info');
         $('#loginModal').style.display = 'flex';
       }
     });
@@ -1047,7 +1099,7 @@
       localStorage.setItem('userRole', userRole);
       $('#loginModal').style.display = 'none';
       updateUIForRole();
-      alert(`Logged in as ${userRole}.`);
+      toast(`Logged in as ${userRole}.`,'success');
     });
     if(logoutBtn) logoutBtn.addEventListener('click', ()=>{
       userRole = 'citizen';
@@ -1196,7 +1248,7 @@
         recordStartMs = Date.now();
         setRecUI('Recording');
       } catch(err){
-        alert('Microphone permission denied or unavailable.');
+        toast('Microphone permission denied or unavailable.','error');
         setRecUI('Idle');
       }
     }
@@ -1247,7 +1299,7 @@
       if(idx === -1) return;
       const item = ashaQueue[idx];
       const text = (item.transcribedText || '').trim();
-      if(!text){ alert('Please add transcription before upload.'); return; }
+      if(!text){ toast('Please add transcription before upload.','warn'); return; }
       // simulate analyze -> push to commentsStore
       const sentiment = analyzeSentiment(text);
       commentsStore.unshift({
@@ -1263,9 +1315,9 @@
       ashaQueue.splice(idx,1);
       persistAll();
       renderAshaQueue();
-      const statCommentsEl = $('#statComments');
-      if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
-      alert('Uploaded to analysis. Officials can view it in the dashboard.');
+          const statCommentsEl = $('#statComments');
+          if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
+          toast('Uploaded to analysis. Officials can view it in the dashboard.','success');
     }
 
     if(queueList){
@@ -1280,7 +1332,7 @@
             const tx = queueList.querySelector(`.asha-tx[data-id="${id}"]`);
             ashaQueue[idx].transcribedText = (tx && tx.value) || '';
             persistAll();
-            alert('Saved');
+            toast('Saved transcription.','success');
           }
         }
         if(uploadBtn){ uploadQueueItem(uploadBtn.dataset.id); }
@@ -1289,6 +1341,7 @@
           ashaQueue = ashaQueue.filter(q => q.id !== id);
           persistAll();
           renderAshaQueue();
+          toast('Deleted from queue.','info');
         }
       });
     }
@@ -1298,6 +1351,7 @@
         // upload only items with transcription
         const ready = ashaQueue.filter(q => (q.transcribedText||'').trim().length>0).map(q=>q.id);
         ready.forEach(uploadQueueItem);
+        if(ready.length === 0) toast('No items with transcription to sync.','info');
       });
     }
     if(clearQueueBtn){
@@ -1306,6 +1360,7 @@
           ashaQueue = [];
           persistAll();
           renderAshaQueue();
+          toast('Queue cleared.','info');
         }
       });
     }
@@ -1314,17 +1369,158 @@
     const statCommentsEl2 = $('#statComments');
     if (statCommentsEl2) statCommentsEl2.textContent = commentsStore.length;
 
-    // Example: prefill with sample comments (optional)
-    // Uncomment to start with some demo analysis data:
-    /*
-    commentsStore.push({
-      id:'C1001', name:'R. Patel', text:'This amendment is helpful but may create extra compliance burden. Suggest clearer definitions.', file:null, sentiment:'Neutral', amendId:'A2', date:'2025-09-25', amendTitle:'Draft: New Rules for Corporate Governance'
-    });
-    commentsStore.push({
-      id:'C1002', name:'S. Kumar', text:'I fully support the change, it improves transparency and is beneficial for small companies.', file:null, sentiment:'Positive', amendId:'A1', date:'2025-09-12', amendTitle:'Draft: Amend Companies Act - Clause 34'
-    });
-    $('#statComments').textContent = commentsStore.length;
-    */
+    /*************
+     * Toasts, Seeding, and Enhancements
+     *************/
+    function toast(message, type='info', timeout=2400){
+      const c = document.getElementById('toastContainer');
+      if(!c) return;
+      const d = document.createElement('div');
+      d.className = `toast ${type}`;
+      d.textContent = message;
+      c.appendChild(d);
+      setTimeout(()=>{ d.style.opacity = '0'; d.style.transition='opacity .3s'; }, timeout-300);
+      setTimeout(()=> d.remove(), timeout);
+    }
+
+    function seedDemoData(){
+      const samples = [
+        {name:'R. Patel', amendId:'A2', text:'This amendment is helpful and improves governance. Please clarify board independence criteria.', date:'2025-09-25'},
+        {name:'S. Kumar', amendId:'A1', text:'I fully support the change, it improves transparency and reduces ambiguity for small businesses.', date:'2025-09-12'},
+        {name:'M. Singh', amendId:'A3', text:'Concern about increased compliance burden for MSMEs. Definitions are confusing.', date:'2025-08-31'},
+        {name:'N. Gupta', amendId:'A4', text:'Positive step to adjust small company thresholds. Beneficial and fair.', date:'2025-09-16'},
+        {name:'A. Das', amendId:'A2', text:'Against the whistleblower process as drafted; seems difficult to implement.', date:'2025-09-26'},
+        {name:'P. Verma', amendId:'A3', text:'Neutral view; supportive if digital attestation remains optional.', date:'2025-09-01'}
+      ];
+      commentsStore = samples.map(s => ({
+        id: 'C' + Math.floor(Math.random()*90000+10000),
+        name: s.name,
+        text: s.text,
+        file: null,
+        sentiment: analyzeSentiment(s.text),
+        amendId: s.amendId,
+        amendTitle: (demoAmendments.find(a=>a.id===s.amendId)||{}).title || s.amendId,
+        date: s.date
+      })).concat(commentsStore || []);
+      decisionsStore = {
+        A1: { notes: 'Generally positive; proceed with minor clarifications.', updatedAt: new Date().toISOString() },
+        A2: { notes: 'Mixed sentiment. Revisit independence definitions; consult industry.', updatedAt: new Date().toISOString() }
+      };
+      localStorage.setItem('seeded','1');
+      persistAll();
+      const statCommentsEl = $('#statComments');
+      if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
+      toast('Demo data seeded.','success');
+    }
+
+    function resetDemo(){
+      localStorage.removeItem('commentsStore');
+      localStorage.removeItem('decisionsStore');
+      localStorage.removeItem('ashaQueue');
+      localStorage.removeItem('seeded');
+      commentsStore = [];
+      decisionsStore = {};
+      ashaQueue = [];
+      seedDemoData();
+      renderDashboard();
+      renderAshaQueue();
+      toast('Demo reset and reseeded.','success');
+    }
+
+    // Auto-seed once
+    if(!localStorage.getItem('seeded')){ seedDemoData(); }
+
+    // Attach seed/reset buttons
+    const seedBtn = document.getElementById('seedDemoBtn');
+    const resetBtn = document.getElementById('resetDemoBtn');
+    if(seedBtn) seedBtn.addEventListener('click', seedDemoData);
+    if(resetBtn) resetBtn.addEventListener('click', resetDemo);
+
+    // Comment char counter
+    const commentTextEl = document.getElementById('commentText');
+    const commentCharCount = document.getElementById('commentCharCount');
+    if(commentTextEl && commentCharCount){
+      commentTextEl.setAttribute('maxlength','500');
+      commentTextEl.addEventListener('input', ()=>{
+        const len = (commentTextEl.value||'').length;
+        commentCharCount.textContent = String(len);
+      });
+    }
+
+    // Amendment details modal
+    function showAmendmentDetails(am){
+      const modal = document.createElement('div');
+      modal.style.position='fixed';
+      modal.style.left=0; modal.style.top=0; modal.style.right=0; modal.style.bottom=0;
+      modal.style.background='rgba(10,15,20,0.35)';
+      modal.style.zIndex=220; modal.style.display='flex'; modal.style.alignItems='center'; modal.style.justifyContent='center';
+      const card = document.createElement('div');
+      card.className='card'; card.style.width='720px'; card.style.maxWidth='94%'; card.style.padding='18px';
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="margin:0">${am.title}</h3>
+            <div class="muted small">${am.date}</div>
+          </div>
+          <div><button class="btn ghost close">Close</button></div>
+        </div>
+        <hr style="margin:12px 0">
+        <div class="small" style="color:#0f172a;">${am.desc || 'No description available.'}</div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn open-comment-now">Comment on this</button>
+          <button class="btn ghost view-comments-now">View comments</button>
+        </div>
+      `;
+      modal.appendChild(card);
+      document.body.appendChild(modal);
+      card.querySelector('.close').addEventListener('click', ()=> modal.remove());
+      modal.addEventListener('click', (ev)=>{ if(ev.target===modal) modal.remove(); });
+      card.querySelector('.open-comment-now').addEventListener('click', ()=>{ modal.remove(); openDrawer(am); });
+      card.querySelector('.view-comments-now').addEventListener('click', ()=>{ modal.remove(); const list = commentsStore.filter(c=>c.amendId===am.id); showCommentsModal(am.id, list); });
+    }
+
+    // Decisions list rendering
+    function renderDecisionsList(){
+      const card = document.getElementById('decisionsListCard');
+      const listEl = document.getElementById('decisionsList');
+      if(!card || !listEl) return;
+      if(userRole !== 'official'){ card.style.display='none'; return; }
+      const entries = Object.entries(decisionsStore||{});
+      if(entries.length === 0){
+        listEl.textContent = 'No notes yet.';
+      } else {
+        listEl.innerHTML = '';
+        entries.forEach(([id, obj])=>{
+          const am = demoAmendments.find(a=>a.id===id);
+          const div = document.createElement('div');
+          div.style.border='1px solid rgba(15,23,42,0.06)';
+          div.style.borderRadius='8px';
+          div.style.padding='8px';
+          div.style.marginTop='8px';
+          div.innerHTML = `<div style="font-weight:700;">${am ? am.title : id}</div><div class=\"small muted\">${new Date(obj.updatedAt||Date.now()).toLocaleString()}</div><div style=\"margin-top:6px;\">${(obj.notes||'').replace(/</g,'&lt;')}</div>`;
+          listEl.appendChild(div);
+        });
+      }
+      card.style.display = 'block';
+    }
+
+    // Hook decision select to load saved text
+    const decisionSelect = document.getElementById('decisionAmendSelect');
+    const decisionNotesEl = document.getElementById('decisionNotes');
+    if(decisionSelect && decisionNotesEl){
+      decisionSelect.addEventListener('change', ()=>{
+        const id = decisionSelect.value;
+        decisionNotesEl.value = (decisionsStore[id]?.notes) || '';
+      });
+    }
+
+    // Keep decisions list in sync when dashboard renders or notes save
+    const origRenderDashboard = renderDashboard;
+    renderDashboard = function(){
+      origRenderDashboard();
+      renderDecisionsList();
+      if(decisionSelect && decisionSelect.value){ decisionNotesEl.value = (decisionsStore[decisionSelect.value]?.notes)||''; }
+    };
   </script>
 </body>
 </html>
