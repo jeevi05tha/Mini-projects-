@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="default">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>MCA - Ministry of Corporate Affairs (Single-file Clone)</title>
+  <meta name="description" content="Unofficial single-file front-end clone of the Ministry of Corporate Affairs website for demo purposes." />
+  <meta name="color-scheme" content="light dark" />
+  <style>
+    /* ----------------------------------------
+       MCA Clone - Single File (HTML+CSS+JS)
+       ---------------------------------------- */
+
+    /* CSS Reset and base */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+      color: #1b1f23;
+      background: #ffffff;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    :root {
+      --mca-blue: #1e4d91;
+      --mca-blue-2: #113b77;
+      --mca-blue-3: #0a2a59;
+      --mca-cyan: #1aa3d9;
+      --mca-gold: #f2b01e;
+      --mca-bg: #f6f8fb;
+      --mca-border: #e6e9ee;
+      --mca-text: #1b1f23;
+      --mca-muted: #6b7280;
+      --focus: #ffbf47;
+    }
+
+    /* High contrast mode */
+    .high-contrast body,
+    .high-contrast {
+      --mca-blue: #000000;
+      --mca-blue-2: #000000;
+      --mca-blue-3: #000000;
+      --mca-cyan: #000000;
+      --mca-gold: #ffff00;
+      --mca-bg: #ffffff;
+      --mca-border: #000000;
+      --mca-text: #000000;
+      --mca-muted: #000000;
+      background: #ffffff !important;
+      color: #000000 !important;
+    }
+
+    a { color: var(--mca-blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    img { max-width: 100%; height: auto; }
+    ul { margin: 0; padding: 0; list-style: none; }
+
+    .container {
+      width: min(1200px, 92vw);
+      margin: 0 auto;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: -10000px;
+      top: auto;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+    }
+    .skip-link:focus {
+      position: fixed;
+      left: 1rem;
+      top: 1rem;
+      width: auto;
+      height: auto;
+      padding: 0.5rem 0.75rem;
+      background: #fff;
+      color: #000;
+      z-index: 10000;
+      border: 2px solid #000;
+    }
+
+    /* Topbar */
+    .topbar {
+      background: linear-gradient(90deg, var(--mca-blue-3), var(--mca-blue));
+      color: #fff;
+      font-size: 0.875rem;
+    }
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.4rem 0;
+    }
+    .topbar-left, .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .topbar a { color: #fff; text-decoration: none; }
+    .topbar a:hover { text-decoration: underline; }
+    .topbar .divider { opacity: 0.5; }
+
+    /* Masthead */
+    .masthead {
+      border-bottom: 1px solid var(--mca-border);
+      background: #fff;
+    }
+    .masthead-inner {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+    .emblem {
+      width: 36px; height: 36px; display: inline-block;
+    }
+    .brand-text {
+      display: flex; flex-direction: column; min-width: 0;
+    }
+    .brand-text .gov {
+      font-size: 0.78rem; color: var(--mca-muted);
+    }
+    .brand-text .mca {
+      font-weight: 700; font-size: 1.1rem; color: var(--mca-blue-2);
+      white-space: nowrap; text-overflow: ellipsis; overflow: hidden;
+    }
+
+    .global-search {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid var(--mca-border);
+      border-radius: 999px;
+      padding: 0.25rem;
+      background: #fff;
+    }
+    .global-search input[type="search"] {
+      flex: 1;
+      border: 0;
+      outline: none;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.95rem;
+      border-radius: 999px;
+    }
+    .btn-search {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 0.35rem;
+      padding: 0.55rem 0.9rem;
+      background: var(--mca-blue);
+      color: #fff;
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+    }
+    .btn-search:hover { filter: brightness(1.05); }
+
+    .mast-actions { display: flex; align-items: center; gap: 0.5rem; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 0.55rem 0.85rem; border-radius: 10px;
+      border: 1px solid var(--mca-border); background: #fff; color: var(--mca-blue-2);
+      cursor: pointer; font-weight: 600;
+    }
+    .btn.primary { background: var(--mca-gold); border-color: #d49a19; color: #222; }
+    .btn.ghost { background: transparent; }
+
+    /* Primary Nav */
+    .nav {
+      background: #ffffff;
+      border-bottom: 1px solid var(--mca-border);
+      position: sticky; top: 0; z-index: 500;
+    }
+    .nav-inner { display: flex; align-items: center; gap: 1rem; }
+    .nav-menu {
+      display: flex; align-items: center; gap: 0.25rem;
+      overflow: auto hidden; scrollbar-width: none; -ms-overflow-style: none;
+    }
+    .nav-menu::-webkit-scrollbar { display: none; }
+    .nav-item { position: relative; }
+    .nav-link { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.9rem 0.8rem; color: #263238; font-weight: 600; border-radius: 8px; }
+    .nav-link:hover, .nav-link[aria-expanded="true"] { background: var(--mca-bg); text-decoration: none; }
+    .nav-chevron { width: 14px; height: 14px; }
+
+    .submenu {
+      position: absolute; left: 0; top: calc(100% + 2px);
+      background: #fff; border: 1px solid var(--mca-border); border-radius: 10px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+      min-width: 280px; padding: 0.5rem; display: none;
+    }
+    .submenu.open { display: grid; grid-template-columns: 1fr; gap: 0.25rem; }
+    .submenu a { padding: 0.6rem 0.7rem; border-radius: 8px; color: #111827; display: flex; align-items: center; gap: 0.5rem; }
+    .submenu a:hover { background: var(--mca-bg); text-decoration: none; }
+
+    .nav-spacer { flex: 1; }
+
+    .hamburger { display: none; background: #fff; border: 1px solid var(--mca-border); padding: 0.5rem; border-radius: 10px; }
+
+    /* Mobile Nav Drawer */
+    .mobile-nav {
+      display: none;
+      background: #fff;
+      border-top: 1px solid var(--mca-border);
+    }
+    .mobile-nav details { border-bottom: 1px solid var(--mca-border); }
+    .mobile-nav summary { list-style: none; cursor: pointer; padding: 0.9rem 0; font-weight: 700; display: flex; align-items: center; justify-content: space-between; }
+    .mobile-submenu { padding: 0 0 0.75rem 0; display: grid; gap: 0.35rem; }
+    .mobile-submenu a { padding: 0.55rem 0.5rem; border-radius: 8px; }
+    .mobile-submenu a:hover { background: var(--mca-bg); text-decoration: none; }
+
+    /* Hero */
+    .hero {
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(30,77,145,0.15), transparent),
+                  radial-gradient(800px 400px at 90% 10%, rgba(26,163,217,0.15), transparent),
+                  linear-gradient(180deg, #ffffff, #f9fbff);
+      border-bottom: 1px solid var(--mca-border);
+    }
+    .hero-inner { padding: 2.25rem 0 1.75rem; display: grid; gap: 1.25rem; }
+    .hero-kicker { color: var(--mca-blue-2); font-weight: 700; font-size: 0.9rem; letter-spacing: 0.02em; }
+    .hero-title { font-size: clamp(1.6rem, 1.1rem + 2.2vw, 2.6rem); line-height: 1.15; margin: 0; color: #0f172a; }
+    .hero-sub { color: #475569; max-width: 68ch; }
+
+    .hero-search {
+      display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+    }
+    .hero-search .search-wrap { flex: 1 1 520px; display: flex; gap: 0.5rem; }
+    .hero-search input[type="search"] { flex: 1; border: 1px solid var(--mca-border); border-radius: 12px; padding: 0.8rem 1rem; font-size: 1rem; }
+    .hero-search .btn { padding: 0.8rem 1rem; }
+
+    .quick-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      padding: 0.55rem 0.8rem; border-radius: 999px; background: #fff; border: 1px solid var(--mca-border);
+      color: #0f172a; font-weight: 600;
+    }
+    .pill:hover { background: var(--mca-bg); text-decoration: none; }
+
+    /* Services */
+    .section {
+      padding: 2rem 0 1.25rem;
+    }
+    .section-header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; margin-bottom: 0.9rem; }
+    .section-title { margin: 0; font-size: 1.35rem; color: #0f172a; }
+    .section-sub { color: #64748b; font-size: 0.95rem; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 0.9rem;
+    }
+    .card {
+      grid-column: span 4;
+      background: #fff;
+      border: 1px solid var(--mca-border);
+      border-radius: 14px;
+      padding: 1rem;
+      display: grid; gap: 0.4rem;
+      transition: box-shadow .2s ease, transform .2s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(20, 38, 90, 0.08);
+      text-decoration: none;
+    }
+    .card .icon { width: 36px; height: 36px; }
+    .card h3 { margin: 0.1rem 0 0.25rem; font-size: 1.05rem; color: #0f172a; }
+    .card p { margin: 0; color: #475569; font-size: 0.95rem; }
+    .card .cta { margin-top: 0.35rem; font-weight: 700; color: var(--mca-blue-2); display: inline-flex; align-items: center; gap: 0.35rem; }
+
+    /* Updates / Tabs */
+    .tabs { display: grid; gap: 0.85rem; }
+    .tablist {
+      display: flex; gap: 0.5rem; overflow: auto hidden; scrollbar-width: none;
+    }
+    .tablist::-webkit-scrollbar { display: none; }
+    .tab {
+      border: 1px solid var(--mca-border); background: #fff; color: #0f172a;
+      padding: 0.55rem 0.9rem; border-radius: 999px; font-weight: 700;
+    }
+    .tab[aria-selected="true"] { background: var(--mca-blue); color: #fff; border-color: var(--mca-blue); }
+
+    .tabpanel { display: none; }
+    .tabpanel.active { display: grid; gap: 0.35rem; }
+    .list-item { display: grid; grid-template-columns: 1fr auto; gap: 0.6rem; align-items: start; padding: 0.7rem 0.6rem; border-bottom: 1px dashed var(--mca-border); }
+    .list-item .meta { color: #64748b; font-size: 0.85rem; }
+    .list-item a { font-weight: 600; color: #0f172a; }
+    .list-item a:hover { color: var(--mca-blue-2); }
+
+    /* Footer */
+    .footer {
+      background: linear-gradient(180deg, #f9fbff, #f3f6fb);
+      border-top: 1px solid var(--mca-border);
+      margin-top: 1.5rem;
+    }
+    .footer-inner { padding: 1.25rem 0; }
+    .footer-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 1rem; }
+    .fcol { grid-column: span 3; }
+    .fcol h4 { margin: 0 0 0.65rem; color: #0f172a; }
+    .fcol ul { display: grid; gap: 0.35rem; }
+    .fcol a { color: #111827; }
+    .fcol a:hover { color: var(--mca-blue-2); text-decoration: none; }
+    .copyright {
+      border-top: 1px solid var(--mca-border);
+      margin-top: 1rem;
+      padding-top: 0.9rem;
+      color: #6b7280; font-size: 0.9rem;
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* Back to top */
+    .back-to-top {
+      position: fixed; right: 1rem; bottom: 1rem;
+      width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--mca-border);
+      display: inline-flex; align-items: center; justify-content: center;
+      background: #fff; cursor: pointer; box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      opacity: 0; visibility: hidden; transform: translateY(8px);
+      transition: all .2s ease;
+      z-index: 999;
+    }
+    .back-to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
+
+    /* Utilities */
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    .muted { color: var(--mca-muted); }
+    .chip { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 999px; background: #eef2ff; color: #3730a3; font-weight: 700; font-size: 0.8rem; }
+
+    /* Responsive */
+    @media (max-width: 1080px) {
+      .masthead-inner { grid-template-columns: 1fr auto auto; }
+      .global-search { display: none; }
+    }
+    @media (max-width: 920px) {
+      .cards .card { grid-column: span 6; }
+      .fcol { grid-column: span 6; }
+      .nav-inner { justify-content: space-between; }
+      .hamburger { display: inline-flex; }
+      .nav-menu { display: none; }
+      .mobile-nav { display: block; }
+    }
+    @media (max-width: 640px) {
+      .cards .card { grid-column: span 12; }
+      .fcol { grid-column: span 12; }
+      .masthead-inner { grid-template-columns: 1fr auto; gap: 0.75rem; }
+      .hero-search .search-wrap { flex: 1 1 100%; }
+    }
+
+    /* Focus styles */
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Topbar -->
+  <div class="topbar" role="navigation" aria-label="Utility">
+    <div class="container topbar-inner">
+      <div class="topbar-left">
+        <span aria-hidden="true" class="chip">MCA21</span>
+        <span>Version 3 Portal</span>
+      </div>
+      <div class="topbar-right">
+        <button class="btn ghost" id="btn-contrast" aria-pressed="false" title="Toggle high contrast">Contrast</button>
+        <div class="divider">|</div>
+        <button class="btn ghost" id="btn-font-dec" title="Decrease font size" aria-label="Decrease font size">A-</button>
+        <button class="btn ghost" id="btn-font-reset" title="Reset font size" aria-label="Reset font size">A</button>
+        <button class="btn ghost" id="btn-font-inc" title="Increase font size" aria-label="Increase font size">A+</button>
+        <div class="divider">|</div>
+        <a href="#" aria-label="Screen reader help">Screen Reader</a>
+        <div class="divider">|</div>
+        <a href="#">हिन्दी</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Masthead -->
+  <header class="masthead">
+    <div class="container masthead-inner">
+      <a href="#" class="brand" aria-label="Ministry of Corporate Affairs home">
+        <svg class="emblem" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0%" stop-color="#1e4d91" />
+              <stop offset="100%" stop-color="#1aa3d9" />
+            </linearGradient>
+          </defs>
+          <rect x="0" y="0" width="48" height="48" rx="10" fill="url(#g1)" />
+          <path d="M14 30l10-14 10 14" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="24" cy="30" r="3" fill="#fff" />
+        </svg>
+        <span class="brand-text">
+          <span class="gov">Government of India</span>
+          <span class="mca">Ministry of Corporate Affairs</span>
+        </span>
+      </a>
+
+      <form class="global-search" role="search" aria-label="Site search" onsubmit="return false;">
+        <input type="search" placeholder="Search services, forms, companies, LLPs..." aria-label="Search" />
+        <button class="btn-search" type="submit">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Search</span>
+        </button>
+      </form>
+
+      <div class="mast-actions">
+        <button class="btn" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Login</span>
+        </button>
+        <button class="btn primary" type="button">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-3-3.87"/><path d="M4 21v-2a4 4 0 0 1 3-3.87"/><circle cx="12" cy="7" r="4"/></svg>
+          <span>Register</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Primary Navigation -->
+  <nav class="nav" aria-label="Primary">
+    <div class="container nav-inner">
+      <button class="hamburger" id="btn-hamburger" aria-expanded="false" aria-controls="mobile-nav">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+        <span class="sr-only">Toggle menu</span>
+      </button>
+
+      <ul class="nav-menu" role="menubar">
+        <li class="nav-item" role="none">
+          <a href="#" class="nav-link" role="menuitem" aria-haspopup="true" aria-expanded="false">About MCA <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"></polyline></svg></a>
+          <div class="submenu" role="menu">
+            <a href="#" role="menuitem">Vision & Mission</a>
+            <a href="#" role="menuitem">Organisational Structure</a>
+            <a href="#" role="menuitem">Acts & Rules</a>
+            <a href="#" role="menuitem">RTI</a>
+          </div>
+        </li>
+        <li class="nav-item" role="none">
+          <a href="#" class="nav-link" role="menuitem" aria-haspopup="true" aria-expanded="false">Services <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"></polyline></svg></a>
+          <div class="submenu" role="menu">
+            <a href="#" role="menuitem">Company Services</a>
+            <a href="#" role="menuitem">LLP Services</a>
+            <a href="#" role="menuitem">Compliance & Filing</a>
+            <a href="#" role="menuitem">MCA21 V3</a>
+          </div>
+        </li>
+        <li class="nav-item" role="none">
+          <a href="#" class="nav-link" role="menuitem" aria-haspopup="true" aria-expanded="false">Data & Reports <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"></polyline></svg></a>
+          <div class="submenu" role="menu">
+            <a href="#" role="menuitem">Company Master Data</a>
+            <a href="#" role="menuitem">Public Documents</a>
+            <a href="#" role="menuitem">Statistics</a>
+          </div>
+        </li>
+        <li class="nav-item" role="none">
+          <a href="#" class="nav-link" role="menuitem" aria-haspopup="true" aria-expanded="false">Learning <svg class="nav-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden><polyline points="6 9 12 15 18 9"></polyline></svg></a>
+          <div class="submenu" role="menu">
+            <a href="#" role="menuitem">MCA Labs</a>
+            <a href="#" role="menuitem">Help & FAQs</a>
+            <a href="#" role="menuitem">e-Consultation</a>
+          </div>
+        </li>
+        <li class="nav-item" role="none">
+          <a href="#" class="nav-link" role="menuitem">Contact</a>
+        </li>
+      </ul>
+
+      <div class="nav-spacer"></div>
+
+      <div class="mobile-nav" id="mobile-nav" hidden>
+        <details>
+          <summary>About MCA</summary>
+          <div class="mobile-submenu">
+            <a href="#">Vision & Mission</a>
+            <a href="#">Organisational Structure</a>
+            <a href="#">Acts & Rules</a>
+            <a href="#">RTI</a>
+          </div>
+        </details>
+        <details>
+          <summary>Services</summary>
+          <div class="mobile-submenu">
+            <a href="#">Company Services</a>
+            <a href="#">LLP Services</a>
+            <a href="#">Compliance & Filing</a>
+            <a href="#">MCA21 V3</a>
+          </div>
+        </details>
+        <details>
+          <summary>Data & Reports</summary>
+          <div class="mobile-submenu">
+            <a href="#">Company Master Data</a>
+            <a href="#">Public Documents</a>
+            <a href="#">Statistics</a>
+          </div>
+        </details>
+        <details>
+          <summary>Learning</summary>
+          <div class="mobile-submenu">
+            <a href="#">MCA Labs</a>
+            <a href="#">Help & FAQs</a>
+            <a href="#">e-Consultation</a>
+          </div>
+        </details>
+        <a class="pill" style="margin:0.5rem 0 0.75rem; width:fit-content" href="#">Contact</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="container hero-inner">
+      <span class="hero-kicker">MCA21</span>
+      <h1 id="hero-title" class="hero-title">Ministry of Corporate Affairs</h1>
+      <p class="hero-sub">Providing easy and secure access to company and LLP services, e-filing, and public information through the MCA21 portal.</p>
+
+      <div class="hero-search" role="search" aria-label="Quick search">
+        <div class="search-wrap">
+          <input type="search" placeholder="Try: Incorporate a company, DIN, name reservation…" aria-label="Search" />
+          <button class="btn" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <span>Search</span>
+          </button>
+        </div>
+        <div class="quick-links" aria-label="Popular links">
+          <a class="pill" href="#">Incorporate Company</a>
+          <a class="pill" href="#">Incorporate LLP</a>
+          <a class="pill" href="#">Company Filing</a>
+          <a class="pill" href="#">Name Reservation</a>
+          <a class="pill" href="#">MCA Login</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="section" aria-labelledby="services-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="services-title" class="section-title">Key Services</h2>
+        <div class="section-sub">Most used services for companies and LLPs</div>
+      </div>
+      <div class="cards">
+        <a class="card" href="#">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          <h3>Incorporate a Company</h3>
+          <p>Register a new company and get CIN.</p>
+          <span class="cta">Get started →</span>
+        </a>
+        <a class="card" href="#">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21h18"/><path d="M5 21V8l7-5 7 5v13"/><path d="M9 21V12h6v9"/></svg>
+          <h3>Incorporate LLP</h3>
+          <p>Register a new Limited Liability Partnership.</p>
+          <span class="cta">Apply now →</span>
+        </a>
+        <a class="card" href="#">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v4H4z"/><path d="M4 12h16v8H4z"/></svg>
+          <h3>Compliance Filing</h3>
+          <p>File annual returns and other compliance forms.</p>
+          <span class="cta">File a form →</span>
+        </a>
+        <a class="card" href="#">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 21v-3H3v3"/></svg>
+          <h3>MCA21 V3 Portal</h3>
+          <p>Access the latest MCA21 services and changes.</p>
+          <span class="cta">Open portal →</span>
+        </a>
+        <a class="card" href="#">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h18v4H3z"/><path d="M3 11h18v4H3z"/><path d="M3 19h18v2H3z"/></svg>
+          <h3>Company Master Data</h3>
+          <p>Search company/LLP master data and charges.</p>
+          <span class="cta">Search data →</span>
+        </a>
+        <a class="card" href="#">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          <h3>Track Payment/Service</h3>
+          <p>Track payment status and SRNs for filings.</p>
+          <span class="cta">Track now →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Updates & News -->
+  <section class="section" aria-labelledby="updates-title">
+    <div class="container">
+      <div class="section-header">
+        <h2 id="updates-title" class="section-title">Updates</h2>
+        <div class="section-sub">What's new, circulars and important messages</div>
+      </div>
+      <div class="tabs" data-tabs>
+        <div class="tablist" role="tablist" aria-label="Updates tabs">
+          <button role="tab" aria-selected="true" aria-controls="tab-wn" id="tab-wn-btn" class="tab">What's New</button>
+          <button role="tab" aria-selected="false" aria-controls="tab-news" id="tab-news-btn" class="tab">News & Updates</button>
+          <button role="tab" aria-selected="false" aria-controls="tab-msg" id="tab-msg-btn" class="tab">Important Messages</button>
+        </div>
+        <div id="tab-wn" role="tabpanel" aria-labelledby="tab-wn-btn" class="tabpanel active">
+          <div class="list-item">
+            <div>
+              <a href="#">Deployment of new e-Forms for LLP</a>
+              <div class="meta">Circular · 03 Oct 2025</div>
+            </div>
+            <span class="chip">New</span>
+          </div>
+          <div class="list-item">
+            <div>
+              <a href="#">MCA21 V3 – Scheduled Maintenance Window</a>
+              <div class="meta">Advisory · 01 Oct 2025</div>
+            </div>
+            <span class="chip">Notice</span>
+          </div>
+          <div class="list-item">
+            <div>
+              <a href="#">Stakeholder Awareness Program on e-Filing</a>
+              <div class="meta">Event · 29 Sep 2025</div>
+            </div>
+            <span class="chip">Event</span>
+          </div>
+        </div>
+        <div id="tab-news" role="tabpanel" aria-labelledby="tab-news-btn" class="tabpanel">
+          <div class="list-item">
+            <div>
+              <a href="#">Press Release: Simplification of Company Incorporation</a>
+              <div class="meta">Press Release · 25 Sep 2025</div>
+            </div>
+            <span class="chip">Press</span>
+          </div>
+          <div class="list-item">
+            <div>
+              <a href="#">Monthly statistics: Company registrations and LLPs</a>
+              <div class="meta">Report · 18 Sep 2025</div>
+            </div>
+            <span class="chip">Report</span>
+          </div>
+        </div>
+        <div id="tab-msg" role="tabpanel" aria-labelledby="tab-msg-btn" class="tabpanel">
+          <div class="list-item">
+            <div>
+              <a href="#">Beware of fraudulent emails and calls claiming to be MCA</a>
+              <div class="meta">Advisory · 10 Sep 2025</div>
+            </div>
+            <span class="chip">Alert</span>
+          </div>
+          <div class="list-item">
+            <div>
+              <a href="#">System outage notice for planned upgrade</a>
+              <div class="meta">Notice · 06 Sep 2025</div>
+            </div>
+            <span class="chip">Planned</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container footer-inner">
+      <div class="footer-grid">
+        <div class="fcol">
+          <h4>About MCA</h4>
+          <ul>
+            <li><a href="#">Vision & Mission</a></li>
+            <li><a href="#">Acts, Rules & Policies</a></li>
+            <li><a href="#">Citizen Charter</a></li>
+            <li><a href="#">RTI</a></li>
+          </ul>
+        </div>
+        <div class="fcol">
+          <h4>Important Links</h4>
+          <ul>
+            <li><a href="#">MCA21 V3 Portal</a></li>
+            <li><a href="#">Company Master Data</a></li>
+            <li><a href="#">Public Documents</a></li>
+            <li><a href="#">e-Consultation</a></li>
+          </ul>
+        </div>
+        <div class="fcol">
+          <h4>Help</h4>
+          <ul>
+            <li><a href="#">Help & FAQs</a></li>
+            <li><a href="#">How to Guides</a></li>
+            <li><a href="#">Stakeholder Feedback</a></li>
+            <li><a href="#">Website Policies</a></li>
+          </ul>
+        </div>
+        <div class="fcol">
+          <h4>Contact</h4>
+          <ul>
+            <li>Ministry of Corporate Affairs</li>
+            <li>Email: support@mca.gov.in</li>
+            <li>Phone: 1800-xxx-xxxx</li>
+            <li><a href="#">Contact us</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">
+        <div>© 2025 Ministry of Corporate Affairs (Clone for demo). Content here is illustrative.</div>
+        <div>
+          <a href="#">Accessibility</a> · <a href="#">Privacy Policy</a> · <a href="#">Terms of Use</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="backToTop" aria-label="Back to top">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="18 15 12 9 6 15"></polyline></svg>
+  </button>
+
+  <script>
+    // Accessibility helpers and UI interactions
+    (function() {
+      const root = document.documentElement;
+
+      // High contrast toggle
+      const btnContrast = document.getElementById('btn-contrast');
+      btnContrast?.addEventListener('click', () => {
+        const isOn = root.classList.toggle('high-contrast');
+        btnContrast.setAttribute('aria-pressed', String(isOn));
+      });
+
+      // Font size controls
+      const BASE = 16;
+      let scale = 0; // -2..+2
+      const applyScale = () => {
+        root.style.fontSize = (BASE + scale * 1.5) + 'px';
+      };
+      document.getElementById('btn-font-inc')?.addEventListener('click', () => { if (scale < 3) { scale++; applyScale(); } });
+      document.getElementById('btn-font-dec')?.addEventListener('click', () => { if (scale > -2) { scale--; applyScale(); } });
+      document.getElementById('btn-font-reset')?.addEventListener('click', () => { scale = 0; applyScale(); });
+
+      // Desktop nav dropdowns
+      const nav = document.querySelector('.nav');
+      const items = document.querySelectorAll('.nav-item');
+      items.forEach(item => {
+        const trigger = item.querySelector('.nav-link');
+        const menu = item.querySelector('.submenu');
+        if (!trigger || !menu) return;
+
+        const open = () => { menu.classList.add('open'); trigger.setAttribute('aria-expanded', 'true'); };
+        const close = () => { menu.classList.remove('open'); trigger.setAttribute('aria-expanded', 'false'); };
+
+        // Hover for desktop
+        item.addEventListener('mouseenter', open);
+        item.addEventListener('mouseleave', close);
+
+        // Click/keyboard for accessibility
+        trigger.addEventListener('click', (e) => {
+          e.preventDefault();
+          const isOpen = menu.classList.contains('open');
+          if (isOpen) close(); else {
+            // close others
+            document.querySelectorAll('.submenu.open').forEach(s => s.classList.remove('open'));
+            document.querySelectorAll('.nav-link[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+            open();
+          }
+        });
+        trigger.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') close();
+        });
+        menu.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') close();
+        });
+      });
+
+      // Mobile nav toggle
+      const btnHamburger = document.getElementById('btn-hamburger');
+      const mobileNav = document.getElementById('mobile-nav');
+      btnHamburger?.addEventListener('click', () => {
+        const expanded = btnHamburger.getAttribute('aria-expanded') === 'true';
+        btnHamburger.setAttribute('aria-expanded', String(!expanded));
+        if (mobileNav) {
+          mobileNav.hidden = expanded;
+        }
+      });
+
+      // Tabs (Updates)
+      const tabsRoot = document.querySelector('[data-tabs]');
+      if (tabsRoot) {
+        const tabButtons = tabsRoot.querySelectorAll('[role="tab"]');
+        const panels = tabsRoot.querySelectorAll('[role="tabpanel"]');
+        function showTab(id) {
+          panels.forEach(p => p.classList.remove('active'));
+          tabButtons.forEach(b => b.setAttribute('aria-selected', 'false'));
+          const btn = tabsRoot.querySelector('#' + id + '-btn');
+          const panel = document.getElementById(id);
+          if (btn && panel) {
+            btn.setAttribute('aria-selected', 'true');
+            panel.classList.add('active');
+          }
+        }
+        tabButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            const target = btn.getAttribute('aria-controls');
+            if (target) {
+              showTab(target);
+              history.replaceState(null, '', '#' + target);
+            }
+          });
+        });
+        // Deep link support
+        if (location.hash) {
+          const id = location.hash.slice(1);
+          const exists = Array.from(panels).some(p => p.id === id);
+          if (exists) showTab(id);
+        }
+      }
+
+      // Back to top
+      const backToTop = document.getElementById('backToTop');
+      const onScroll = () => {
+        if (window.scrollY > 300) backToTop?.classList.add('show'); else backToTop?.classList.remove('show');
+      };
+      window.addEventListener('scroll', onScroll, { passive: true });
+      backToTop?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+      // Close any open desktop submenu when clicking outside
+      document.addEventListener('click', (e) => {
+        const isInsideNav = nav?.contains(e.target);
+        if (!isInsideNav) {
+          document.querySelectorAll('.submenu.open').forEach(s => s.classList.remove('open'));
+          document.querySelectorAll('.nav-link[aria-expanded="true"]').forEach(t => t.setAttribute('aria-expanded', 'false'));
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
