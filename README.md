@@ -98,6 +98,7 @@ real-estate-explorer/
 ├── admin.php              # Admin dashboard for management
 ├── db_connect.php         # Database connection configuration
 ├── transaction.php        # Transaction processing script
+├── single.php             # All-in-one single-file app (home/login/dashboard/MCA)
 ├── background.webp        # Hero section background image
 ├── [city-name].jpg        # City-specific images
 └── README.md              # Project documentation
@@ -118,6 +119,10 @@ For Administrators (Official):
 
 MCA eConsultation Mirror:
 - Visit `/mca.php` to view the live MCA eConsultation page in-app. Relative links are resolved to the MCA domain via a `<base>` tag.
+
+Single-file Option:
+- Open `single.php` directly. It bundles Home, Login, Official Dashboard, Admin forms, Transactions, and MCA eConsultation mirror in one file.
+- Routes (query params): `single.php?page=home|login|dashboard|mca`; logout via `single.php?action=logout`.
 
 Official Credentials (default):
 ```text
