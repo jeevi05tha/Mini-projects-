@@ -5,8 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Manobhava — e-Consultation MVP</title>
 
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#2b7fb6" />
+
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(()=>{});
+      });
+    }
+  </script>
 
   <style>
     :root{
@@ -84,6 +94,14 @@
       display:flex;
       gap:12px;
       align-items:center;
+    }
+    .role-badge{
+      background:var(--pill);
+      color:var(--accent);
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:600;
     }
     .btn{
       padding:8px 14px;
@@ -243,6 +261,27 @@
       cursor:pointer;
     }
 
+    /* ASHA field app */
+    .asha-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    .queue-item{
+      border:1px solid rgba(15,23,42,0.06);
+      border-radius:10px;
+      padding:10px;
+      background:linear-gradient(180deg, #fff, #fbfdff);
+    }
+    .badge{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:12px;
+      background:var(--pill);
+      color:var(--accent);
+    }
+
     /* Dashboard Section (hidden by default) */
     #dashboard{
       margin-top:20px;
@@ -310,13 +349,16 @@
     </div>
 
     <nav>
-      <a href="#" class="nav-link active" data-view="home">Home</a>
-      <a href="#" class="nav-link" data-view="consult">e-Consultation</a>
-      <a href="#" class="nav-link" data-view="dashboard">Dashboard</a>
+      <a href="#" class="nav-link active" data-view="home" data-role="all">Home</a>
+      <a href="#" class="nav-link" data-view="consult" data-role="citizen">e-Consultation</a>
+      <a href="#" class="nav-link" data-view="asha" data-role="asha" style="display:none;">ASHA Field App</a>
+      <a href="#" class="nav-link" data-view="dashboard" data-role="official" style="display:none;">Official Dashboard</a>
     </nav>
 
     <div class="right-actions">
+      <span id="roleBadge" class="role-badge" style="display:none;"></span>
       <button class="btn ghost" id="demoLoginBtn">Login</button>
+      <button class="btn ghost" id="logoutBtn" style="display:none;">Logout</button>
       <button class="btn" id="ctaDemo">Try Demo</button>
     </div>
   </header>
@@ -345,10 +387,10 @@
           </div>
         </div>
 
-        <div id="dashboard" class="card">
+        <div id="dashboard" class="card" style="display:none;">
           <div style="display:flex; gap:12px; align-items:center; justify-content:space-between;">
             <div>
-              <h2 style="margin:0;">Dashboard</h2>
+              <h2 style="margin:0;">Official Dashboard</h2>
               <div class="small muted">Visualization of citizen comments: keywords and sentiment distribution.</div>
             </div>
             <div id="filterInfo" class="small muted" style="display:flex; gap:8px; align-items:center;">
@@ -386,6 +428,59 @@
                 <h3 style="margin:0 0 8px">Summary</h3>
                 <div id="summaryText" class="small muted">No analysis yet. Submit comments to generate insights.</div>
               </div>
+
+              <div id="decisionsCard" class="card" style="margin-top:12px; padding:14px; display:none;">
+                <h3 style="margin:0 0 8px">Decision Notes</h3>
+                <div class="small muted">For officials: add per-amendment notes.</div>
+                <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
+                  <label for="decisionAmendSelect" class="small" style="font-weight:600;">Amendment:</label>
+                  <select id="decisionAmendSelect" class="input" style="width:auto; padding:6px 10px;"></select>
+                </div>
+                <textarea id="decisionNotes" rows="5" class="input" placeholder="Write decision notes..."></textarea>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                  <button class="btn" id="saveDecisionBtn">Save Notes</button>
+                  <span id="decisionSavedMsg" class="small muted" style="display:none;">Saved</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ASHA Field App View -->
+        <div id="asha-view" class="card" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div>
+              <h2 style="margin:0">ASHA Field App — Offline</h2>
+              <div class="small muted">Record voice opinions in villages, queue offline, and sync later.</div>
+            </div>
+            <span class="badge">Offline-ready</span>
+          </div>
+
+          <div class="asha-grid" style="margin-top:12px;">
+            <div class="card" style="padding:14px;">
+              <h3 style="margin:0 0 8px">New Voice Capture</h3>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label class="small muted">Amendment</label>
+                <select id="ashaAmendSelect" class="input" style="width:auto; padding:6px 10px;"></select>
+                <label class="small muted">Village</label>
+                <input id="ashaVillage" class="input" placeholder="e.g., Rampur" style="width:180px;" />
+              </div>
+
+              <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+                <button class="btn" id="startRecBtn">Start Recording</button>
+                <button class="btn ghost" id="stopRecBtn" disabled>Stop</button>
+                <span id="recStatus" class="small muted">Idle</span>
+              </div>
+            </div>
+
+            <div class="card" style="padding:14px;">
+              <h3 style="margin:0 0 8px">Queued Items</h3>
+              <div class="small muted">Add a short transcription before syncing to analysis.</div>
+              <div style="display:flex; gap:8px; margin:10px 0;">
+                <button class="btn" id="syncAllBtn">Sync All</button>
+                <button class="btn ghost" id="clearQueueBtn">Clear Queue</button>
+              </div>
+              <div id="ashaQueueList" style="display:flex; flex-direction:column; gap:10px;"></div>
             </div>
           </div>
         </div>
@@ -467,10 +562,15 @@
   <div id="loginModal" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(10,15,20,0.35); z-index:120; align-items:center; justify-content:center;">
     <div class="card" style="width:420px; padding:18px;">
       <h3 style="margin-top:0">Login to Manobhava (demo)</h3>
-      <div class="muted small">Choose role — admin or citizen (demo only)</div>
+      <div class="muted small">Choose role — Official / ASHA / Citizen (demo only)</div>
       <div style="margin-top:12px;">
         <input class="input" id="loginEmail" placeholder="Email" />
         <input class="input" id="loginPass" placeholder="Password" style="margin-top:8px;" />
+        <select class="input" id="loginRole" style="margin-top:8px;">
+          <option value="official">Official</option>
+          <option value="asha">ASHA Worker</option>
+          <option value="citizen" selected>Citizen</option>
+        </select>
         <div style="display:flex; gap:8px; margin-top:12px;">
           <button class="btn" id="loginBtn">Login</button>
           <button class="btn ghost" id="closeLogin">Cancel</button>
@@ -492,6 +592,11 @@
 
     // In-memory storage for demo comments
     let commentsStore = [];
+    let decisionsStore = {};
+    let ashaQueue = [];
+
+    // Role state
+    let userRole = localStorage.getItem('userRole') || 'citizen';
 
     // Selection state for dashboard filter
     let selectedAmendmentId = localStorage.getItem('dashboardFilter') || 'all';
@@ -591,6 +696,13 @@
 
     initDashboardFilter();
 
+    function initDecisionSelect(){
+      const sel = document.getElementById('decisionAmendSelect');
+      if(!sel) return;
+      sel.innerHTML = '';
+      demoAmendments.forEach(a => sel.add(new Option(`${a.id} — ${a.title}`, a.id)));
+    }
+
     /*************
      * Drawer open/close
      *************/
@@ -669,9 +781,13 @@
         const selectEl = document.getElementById('amendmentFilter');
         if(selectEl) selectEl.value = selectedAmendmentId;
 
-        // Navigate to dashboard and render
-        showView('dashboard');
-        renderDashboard();
+        // Navigate to dashboard and render (if role permits)
+        if(userRole === 'official'){
+          showView('dashboard');
+          renderDashboard();
+        } else {
+          alert('Comment submitted. Officials can view analysis in their dashboard.');
+        }
       }, 900);
     });
 
@@ -785,6 +901,12 @@
         }
         summaryEl.textContent = summary;
       }
+
+      // Decisions panel visibility
+      const decisionsCard = document.getElementById('decisionsCard');
+      if(decisionsCard){
+        decisionsCard.style.display = (userRole === 'official') ? 'block' : 'none';
+      }
     }
 
     /*************
@@ -795,17 +917,20 @@
       const homeEl = $('#home-view');
       const consultEl = $('#consult-view');
       const dashEl = $('#dashboard');
+      const ashaEl = $('#asha-view');
       if(homeEl) homeEl.style.display = view === 'home' ? 'block' : 'none';
       if(consultEl) consultEl.style.display = view === 'consult' ? 'block' : 'none';
-      if(dashEl) dashEl.style.display = view === 'dashboard' ? 'block' : 'none';
+      if(dashEl) dashEl.style.display = (view === 'dashboard' && userRole === 'official') ? 'block' : 'none';
+      if(ashaEl) ashaEl.style.display = (view === 'asha' && userRole === 'asha') ? 'block' : 'none';
 
       // update nav active
       $all('.nav-link').forEach(a => {
         a.classList.toggle('active', a.dataset.view === view);
       });
 
-      if(view === 'dashboard'){
+      if(view === 'dashboard' && userRole === 'official'){
         initDashboardFilter();
+        initDecisionSelect();
         renderDashboard();
       }
     }
@@ -823,9 +948,15 @@
     // Try Demo CTA — scroll to consultation and open first amendment
     const ctaDemoBtn = $('#ctaDemo');
     if(ctaDemoBtn) ctaDemoBtn.addEventListener('click', ()=>{
-      showView('consult');
-      // open first amendment's drawer for demo
-      setTimeout(()=> openDrawer(demoAmendments[0]), 260);
+      if(userRole === 'asha'){
+        showView('asha');
+      } else if(userRole === 'official'){
+        showView('dashboard');
+        renderDashboard();
+      } else {
+        showView('consult');
+        setTimeout(()=> openDrawer(demoAmendments[0]), 260);
+      }
     });
 
     /*************
@@ -881,12 +1012,47 @@
     const demoLoginBtn = $('#demoLoginBtn');
     const closeLoginBtn = $('#closeLogin');
     const loginBtn = $('#loginBtn');
+    const logoutBtn = $('#logoutBtn');
+    const roleBadgeEl = $('#roleBadge');
     if(demoLoginBtn) demoLoginBtn.addEventListener('click', ()=> $('#loginModal').style.display = 'flex');
     if(closeLoginBtn) closeLoginBtn.addEventListener('click', ()=> $('#loginModal').style.display = 'none');
     if(loginBtn) loginBtn.addEventListener('click', ()=> {
-      alert('Demo login — visual only. Use the site without authentication.');
+      const roleSel = document.getElementById('loginRole');
+      userRole = (roleSel && roleSel.value) || 'citizen';
+      localStorage.setItem('userRole', userRole);
       $('#loginModal').style.display = 'none';
+      updateUIForRole();
+      alert(`Logged in as ${userRole}.`);
     });
+    if(logoutBtn) logoutBtn.addEventListener('click', ()=>{
+      userRole = 'citizen';
+      localStorage.setItem('userRole', userRole);
+      updateUIForRole();
+      showView('home');
+    });
+
+    function updateUIForRole(){
+      // role badge and auth buttons
+      if(userRole && userRole !== 'citizen'){
+        roleBadgeEl.style.display = 'inline-block';
+        roleBadgeEl.textContent = `Role: ${userRole}`;
+        logoutBtn.style.display = 'inline-block';
+        demoLoginBtn.style.display = 'none';
+      } else {
+        roleBadgeEl.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        demoLoginBtn.style.display = 'inline-block';
+      }
+
+      // nav gating
+      $all('.nav-link').forEach(a => {
+        const allowed = a.dataset.role || 'all';
+        const visible = allowed === 'all' || allowed === userRole;
+        a.style.display = visible ? 'inline-block' : 'none';
+      });
+    }
+
+    updateUIForRole();
 
     // small improvement: close drawer on ESC
     document.addEventListener('keydown', e => {
@@ -895,6 +1061,228 @@
         $('#loginModal').style.display = 'none';
       }
     });
+
+    /*************
+     * Persistence helpers
+     *************/
+    function persistAll(){
+      localStorage.setItem('commentsStore', JSON.stringify(commentsStore));
+      localStorage.setItem('decisionsStore', JSON.stringify(decisionsStore));
+      localStorage.setItem('ashaQueue', JSON.stringify(ashaQueue));
+    }
+    function restoreAll(){
+      try {
+        const cs = JSON.parse(localStorage.getItem('commentsStore')||'[]');
+        if(Array.isArray(cs)) commentsStore = cs;
+      } catch {}
+      try {
+        const ds = JSON.parse(localStorage.getItem('decisionsStore')||'{}');
+        if(ds && typeof ds === 'object') decisionsStore = ds;
+      } catch {}
+      try {
+        const aq = JSON.parse(localStorage.getItem('ashaQueue')||'[]');
+        if(Array.isArray(aq)) ashaQueue = aq;
+      } catch {}
+      const statCommentsEl = $('#statComments');
+      if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
+    }
+    restoreAll();
+
+    /*************
+     * Decisions panel handlers (Officials)
+     *************/
+    const saveDecisionBtn = document.getElementById('saveDecisionBtn');
+    if(saveDecisionBtn){
+      saveDecisionBtn.addEventListener('click', ()=>{
+        const sel = document.getElementById('decisionAmendSelect');
+        const notesEl = document.getElementById('decisionNotes');
+        if(!sel || !notesEl) return;
+        const amendId = sel.value;
+        const notes = notesEl.value.trim();
+        decisionsStore[amendId] = { notes, updatedAt: new Date().toISOString() };
+        persistAll();
+        const msg = document.getElementById('decisionSavedMsg');
+        if(msg){ msg.style.display = 'inline'; setTimeout(()=> msg.style.display='none', 1200); }
+      });
+    }
+
+    /*************
+     * ASHA Field App: recording + queue
+     *************/
+    const ashaAmendSelect = document.getElementById('ashaAmendSelect');
+    if(ashaAmendSelect){
+      demoAmendments.forEach(a => ashaAmendSelect.add(new Option(`${a.id} — ${a.title}`, a.id)));
+    }
+    const ashaVillageEl = document.getElementById('ashaVillage');
+    const startRecBtn = document.getElementById('startRecBtn');
+    const stopRecBtn = document.getElementById('stopRecBtn');
+    const recStatus = document.getElementById('recStatus');
+    const queueList = document.getElementById('ashaQueueList');
+    const syncAllBtn = document.getElementById('syncAllBtn');
+    const clearQueueBtn = document.getElementById('clearQueueBtn');
+
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let recordStartMs = 0;
+    let chunks = [];
+
+    function setRecUI(state){
+      if(recStatus){ recStatus.textContent = state; }
+      if(startRecBtn) startRecBtn.disabled = state !== 'Idle';
+      if(stopRecBtn) stopRecBtn.disabled = state !== 'Recording';
+    }
+
+    async function startRecording(){
+      try{
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        chunks = [];
+        mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'audio/webm' });
+        mediaRecorder.ondataavailable = ev => { if(ev.data && ev.data.size > 0) chunks.push(ev.data); };
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = reader.result; // data URL
+            const durationSec = Math.max(1, Math.round((Date.now() - recordStartMs)/1000));
+            const amendId = ashaAmendSelect ? ashaAmendSelect.value : 'A1';
+            const village = (ashaVillageEl && ashaVillageEl.value.trim()) || 'Unknown';
+            const item = {
+              id: 'AQ' + Math.floor(Math.random()*90000+10000),
+              amendId, village,
+              createdAt: new Date().toISOString(),
+              durationSec,
+              audioBase64: base64,
+              transcribedText: ''
+            };
+            ashaQueue.unshift(item);
+            persistAll();
+            renderAshaQueue();
+          };
+          reader.readAsDataURL(blob);
+          if(mediaStream){ mediaStream.getTracks().forEach(t => t.stop()); }
+          setRecUI('Idle');
+        };
+        mediaRecorder.start();
+        recordStartMs = Date.now();
+        setRecUI('Recording');
+      } catch(err){
+        alert('Microphone permission denied or unavailable.');
+        setRecUI('Idle');
+      }
+    }
+
+    function stopRecording(){
+      try{ if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch {}
+    }
+
+    if(startRecBtn) startRecBtn.addEventListener('click', startRecording);
+    if(stopRecBtn) stopRecBtn.addEventListener('click', stopRecording);
+
+    function renderAshaQueue(){
+      if(!queueList) return;
+      queueList.innerHTML = '';
+      if(ashaQueue.length === 0){
+        queueList.innerHTML = '<div class="muted">No queued items.</div>';
+        return;
+      }
+      ashaQueue.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'queue-item';
+        const amend = demoAmendments.find(a => a.id === item.amendId);
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700">${amend ? amend.title : item.amendId}</div>
+            <div class="small muted">${new Date(item.createdAt).toLocaleString()}</div>
+          </div>
+          <div class="small muted" style="margin-top:4px;">Village: <strong>${item.village}</strong> • Duration: <strong>${item.durationSec}s</strong></div>
+          <audio controls src="${item.audioBase64}" style="width:100%; margin-top:6px;"></audio>
+          <label class="small muted" style="margin-top:8px; display:block;">Transcription</label>
+          <textarea class="input asha-tx" data-id="${item.id}" rows="3" placeholder="Type the summary/transcription here..."></textarea>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="btn asha-save" data-id="${item.id}">Save</button>
+            <button class="btn ghost asha-upload" data-id="${item.id}">Upload to Analysis</button>
+            <button class="btn ghost asha-delete" data-id="${item.id}">Delete</button>
+          </div>
+        `;
+        queueList.appendChild(card);
+        // preset existing text
+        const tx = card.querySelector('.asha-tx');
+        if(tx){ tx.value = item.transcribedText || ''; }
+      });
+    }
+    renderAshaQueue();
+
+    function uploadQueueItem(id){
+      const idx = ashaQueue.findIndex(q => q.id === id);
+      if(idx === -1) return;
+      const item = ashaQueue[idx];
+      const text = (item.transcribedText || '').trim();
+      if(!text){ alert('Please add transcription before upload.'); return; }
+      // simulate analyze -> push to commentsStore
+      const sentiment = analyzeSentiment(text);
+      commentsStore.unshift({
+        id: 'C' + Math.floor(Math.random()*90000+10000),
+        name: 'ASHA (Field)',
+        text,
+        file: null,
+        sentiment,
+        amendId: item.amendId,
+        amendTitle: (demoAmendments.find(a => a.id===item.amendId)||{}).title || item.amendId,
+        date: new Date().toISOString().slice(0,10)
+      });
+      ashaQueue.splice(idx,1);
+      persistAll();
+      renderAshaQueue();
+      const statCommentsEl = $('#statComments');
+      if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
+      alert('Uploaded to analysis. Officials can view it in the dashboard.');
+    }
+
+    if(queueList){
+      queueList.addEventListener('click', (e)=>{
+        const saveBtn = e.target.closest && e.target.closest('.asha-save');
+        const uploadBtn = e.target.closest && e.target.closest('.asha-upload');
+        const delBtn = e.target.closest && e.target.closest('.asha-delete');
+        if(saveBtn){
+          const id = saveBtn.dataset.id;
+          const idx = ashaQueue.findIndex(q => q.id === id);
+          if(idx !== -1){
+            const tx = queueList.querySelector(`.asha-tx[data-id="${id}"]`);
+            ashaQueue[idx].transcribedText = (tx && tx.value) || '';
+            persistAll();
+            alert('Saved');
+          }
+        }
+        if(uploadBtn){ uploadQueueItem(uploadBtn.dataset.id); }
+        if(delBtn){
+          const id = delBtn.dataset.id;
+          ashaQueue = ashaQueue.filter(q => q.id !== id);
+          persistAll();
+          renderAshaQueue();
+        }
+      });
+    }
+
+    if(syncAllBtn){
+      syncAllBtn.addEventListener('click', ()=>{
+        // upload only items with transcription
+        const ready = ashaQueue.filter(q => (q.transcribedText||'').trim().length>0).map(q=>q.id);
+        ready.forEach(uploadQueueItem);
+      });
+    }
+    if(clearQueueBtn){
+      clearQueueBtn.addEventListener('click', ()=>{
+        if(confirm('Clear all queued items?')){
+          ashaQueue = [];
+          persistAll();
+          renderAshaQueue();
+        }
+      });
+    }
+
+    // Keep stats consistent on load
+    const statCommentsEl2 = $('#statComments');
+    if (statCommentsEl2) statCommentsEl2.textContent = commentsStore.length;
 
     // Example: prefill with sample comments (optional)
     // Uncomment to start with some demo analysis data:
