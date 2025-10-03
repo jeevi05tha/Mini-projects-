@@ -514,6 +514,19 @@
                 <button class="btn ghost" id="stopRecBtn" disabled>Stop</button>
                 <span id="recStatus" class="small muted">Idle</span>
               </div>
+
+              <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label class="small muted" style="display:flex; align-items:center; gap:6px;">
+                  <input type="checkbox" id="autoTranscribe" /> Auto‑transcribe (beta)
+                </label>
+                <label class="small muted">Lang</label>
+                <select id="sttLang" class="input" style="width:auto; padding:6px 10px;">
+                  <option value="en-IN" selected>English (India)</option>
+                  <option value="en-US">English (US)</option>
+                  <option value="hi-IN">Hindi (India)</option>
+                </select>
+                <span id="sttStatus" class="small muted">STT: Off</span>
+              </div>
             </div>
 
             <div class="card" style="padding:14px;">
@@ -1218,6 +1231,9 @@
     let mediaStream = null;
     let recordStartMs = 0;
     let chunks = [];
+    let sttRecognition = null;
+    let sttActive = false;
+    let sttPartial = '';
 
     function setRecUI(state){
       if(recStatus){ recStatus.textContent = state; }
@@ -1245,7 +1261,7 @@
               createdAt: new Date().toISOString(),
               durationSec,
               audioBase64: base64,
-              transcribedText: ''
+              transcribedText: sttPartial || ''
             };
             ashaQueue.unshift(item);
             persistAll();
@@ -1254,10 +1270,14 @@
           reader.readAsDataURL(blob);
           if(mediaStream){ mediaStream.getTracks().forEach(t => t.stop()); }
           setRecUI('Idle');
+          stopSTT();
         };
         mediaRecorder.start();
         recordStartMs = Date.now();
         setRecUI('Recording');
+        // Maybe start STT
+        const autoEl = document.getElementById('autoTranscribe');
+        if(autoEl && autoEl.checked){ startSTT(); }
       } catch(err){
         toast('Microphone permission denied or unavailable.','error');
         setRecUI('Idle');
@@ -1266,6 +1286,50 @@
 
     function stopRecording(){
       try{ if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch {}
+    }
+
+    function startSTT(){
+      try{
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(!SpeechRecognition){
+          toast('On‑device speech recognition not supported in this browser.','info');
+          return;
+        }
+        sttRecognition = new SpeechRecognition();
+        const langSel = document.getElementById('sttLang');
+        sttRecognition.lang = (langSel && langSel.value) || 'en-IN';
+        sttRecognition.continuous = true;
+        sttRecognition.interimResults = true;
+        sttPartial = '';
+        sttActive = true;
+        const sttStatus = document.getElementById('sttStatus');
+        if(sttStatus) sttStatus.textContent = 'STT: Listening…';
+        sttRecognition.onresult = (event) => {
+          let interim = '';
+          let final = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) final += transcript + ' ';
+            else interim += transcript + ' ';
+          }
+          sttPartial = (sttPartial + ' ' + final + ' ' + interim).trim().slice(0, 2000);
+          // Show last typed text in the last queue draft if any
+          const lastTx = document.querySelector('#ashaQueueList .asha-tx');
+          if(lastTx && lastTx.value.trim().length === 0){ lastTx.value = sttPartial; }
+        };
+        sttRecognition.onerror = () => { if(sttStatus) sttStatus.textContent = 'STT: Error'; };
+        sttRecognition.onend = () => { if(sttStatus) sttStatus.textContent = 'STT: Off'; sttActive = false; };
+        sttRecognition.start();
+      } catch(err){
+        toast('Failed to start speech recognition.','error');
+      }
+    }
+
+    function stopSTT(){
+      try{ if(sttRecognition && sttActive) sttRecognition.stop(); } catch {}
+      sttActive = false;
+      const sttStatus = document.getElementById('sttStatus');
+      if(sttStatus) sttStatus.textContent = 'STT: Off';
     }
 
     if(startRecBtn) startRecBtn.addEventListener('click', startRecording);
