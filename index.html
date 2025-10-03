@@ -373,6 +373,15 @@
         <button class="btn ghost" data-view-link="dashboard">Open Dashboard (demo)</button>
         <div class="muted" style="margin-left:auto;">MVP — front-end prototype for judges</div>
       </div>
+      <div class="card" style="margin-top:14px;">
+        <h3 style="margin:0 0 8px;">About e‑Consultation — Aims</h3>
+        <ul class="small muted" style="padding-left:18px; margin:8px 0; line-height:1.7;">
+          <li>Enable transparent, inclusive public feedback on proposed amendments</li>
+          <li>Collect comments from citizens and field inputs from ASHA workers</li>
+          <li>Analyze at scale with keywords and sentiment distribution</li>
+          <li>Provide officials a secure, aggregated decision dashboard</li>
+        </ul>
+      </div>
     </section>
 
     <div class="grid" style="margin-top:18px;">
@@ -596,7 +605,7 @@
     let ashaQueue = [];
 
     // Role state
-    let userRole = localStorage.getItem('userRole') || 'citizen';
+    let userRole = localStorage.getItem('userRole') || 'guest';
 
     // Selection state for dashboard filter
     let selectedAmendmentId = localStorage.getItem('dashboardFilter') || 'all';
@@ -939,7 +948,20 @@
     showView('home');
 
     // nav links
-    $all('[data-view-link]').forEach(btn => btn.addEventListener('click', ()=> showView(btn.dataset.viewLink)));
+    $all('[data-view-link]').forEach(btn => btn.addEventListener('click', ()=> {
+      const dest = btn.dataset.viewLink;
+      if(dest === 'consult' && userRole !== 'citizen'){
+        alert('Please login as Citizen to access e-Consultation.');
+        $('#loginModal').style.display = 'flex';
+        return;
+      }
+      if(dest === 'dashboard' && userRole !== 'official'){
+        alert('Officials only. Please login as Official.');
+        $('#loginModal').style.display = 'flex';
+        return;
+      }
+      showView(dest);
+    }));
     $all('.nav-link').forEach(a => a.addEventListener('click', (e) => {
       e.preventDefault();
       showView(a.dataset.view);
@@ -953,9 +975,12 @@
       } else if(userRole === 'official'){
         showView('dashboard');
         renderDashboard();
-      } else {
+      } else if(userRole === 'citizen'){
         showView('consult');
         setTimeout(()=> openDrawer(demoAmendments[0]), 260);
+      } else {
+        alert('Please login to continue.');
+        $('#loginModal').style.display = 'flex';
       }
     });
 
@@ -1033,9 +1058,14 @@
 
     function updateUIForRole(){
       // role badge and auth buttons
-      if(userRole && userRole !== 'citizen'){
+      if(userRole && userRole !== 'guest' && userRole !== 'citizen'){
         roleBadgeEl.style.display = 'inline-block';
         roleBadgeEl.textContent = `Role: ${userRole}`;
+        logoutBtn.style.display = 'inline-block';
+        demoLoginBtn.style.display = 'none';
+      } else if(userRole === 'citizen'){
+        roleBadgeEl.style.display = 'inline-block';
+        roleBadgeEl.textContent = `Role: citizen`;
         logoutBtn.style.display = 'inline-block';
         demoLoginBtn.style.display = 'none';
       } else {
@@ -1047,7 +1077,7 @@
       // nav gating
       $all('.nav-link').forEach(a => {
         const allowed = a.dataset.role || 'all';
-        const visible = allowed === 'all' || allowed === userRole;
+        const visible = allowed === 'all' || (userRole !== 'guest' && allowed === userRole);
         a.style.display = visible ? 'inline-block' : 'none';
       });
     }
