@@ -361,6 +361,24 @@
     .tab{ border:1px solid rgba(15,23,42,0.1); background:var(--card); color:var(--text); padding:6px 10px; border-radius:8px; font-size:12px; cursor:pointer; }
     .tab.active{ border-color: var(--accent); color: var(--accent); background: var(--pill); }
 
+    /* Modern dashboard (dark-in-card) */
+    .modern-dashboard{ background-color:#0f172a; color:#e2e8f0; border-radius:10px; padding:12px; }
+    .modern-dashboard .top-row{ display:flex; flex-wrap:wrap; gap:12px; }
+    .modern-dashboard .md-card{ background-color:#1e293b; border:1px solid #334155; border-radius:10px; padding:16px; flex:1; min-width:260px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    .modern-dashboard .md-card h3{ color:#93c5fd; margin:0 0 8px; font-size:16px; }
+    .modern-dashboard .stats{ display:flex; flex-direction:column; gap:6px; }
+    .modern-dashboard .positive{ color:#22c55e }
+    .modern-dashboard .neutral{ color:#eab308 }
+    .modern-dashboard .negative{ color:#ef4444 }
+    .modern-dashboard .filterbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:#1e293b; padding:0; border-radius:10px; }
+    .modern-dashboard .filterbar input{ flex:1; padding:8px 10px; border-radius:6px; border:none; outline:none; background:#334155; color:#e2e8f0; }
+    .modern-dashboard .filterbar button{ background:#3b82f6; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    .modern-dashboard .filterbar button:hover{ background:#2563eb }
+    .modern-dashboard table{ width:100%; border-collapse:collapse; margin-top:8px; background:#1e293b; border-radius:10px; overflow:hidden; }
+    .modern-dashboard th, .modern-dashboard td{ padding:10px; border-bottom:1px solid #334155; text-align:left; }
+    .modern-dashboard th{ color:#93c5fd; background:#0f172a }
+    .modern-dashboard tr:hover{ background:#334155 }
+
     /* footer */
     footer{
       margin:36px auto;
@@ -572,7 +590,48 @@
             <div class="chip" data-chip="negative">Negative</div>
           </div>
 
-          <div class="dash-grid" style="margin-top:12px;">
+          <div class="modern-dashboard" style="margin-top:12px;">
+            <div class="top-row">
+              <div class="md-card">
+                <h3>Sentiment Counts</h3>
+                <div class="stats">
+                  <div class="positive">Positive: <span id="mdPos">0</span></div>
+                  <div class="neutral">Neutral: <span id="mdNeu">0</span></div>
+                  <div class="negative">Negative: <span id="mdNeg">0</span></div>
+                  <div>Total: <span id="mdTotal">0</span></div>
+                </div>
+              </div>
+
+              <div class="md-card">
+                <h3>Quick Filters</h3>
+                <div class="filterbar">
+                  <input type="text" id="mdFilterInput" placeholder="Search name, comment..." />
+                  <button id="mdClear">Clear</button>
+                </div>
+                <small style="color:#94a3b8;">Tip: Click a row to expand.</small>
+              </div>
+
+              <div class="md-card">
+                <h3>Sentiment Distribution</h3>
+                <canvas id="mdSentChart"></canvas>
+                <p style="font-size: 13px; color:#94a3b8; margin:6px 0 0;">Positive / Neutral / Negative</p>
+              </div>
+            </div>
+
+            <div class="md-card" style="margin-top:12px;">
+              <h3>Comments Summary</h3>
+              <table id="mdCommentsTable">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Sentiment</th>
+                    <th>Comment</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
             <div>
               <div class="card" style="padding:14px;">
                 <h3 style="margin:0 0 8px">Keyword Word Cloud</h3>
@@ -1147,6 +1206,21 @@
         });
       }
 
+      // modern dashboard chart
+      const mdCtxEl = document.getElementById('mdSentChart');
+      if(mdCtxEl){
+        const mdCtx = mdCtxEl.getContext('2d');
+        if(window._mdSentChart) window._mdSentChart.destroy();
+        window._mdSentChart = new Chart(mdCtx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Positive', 'Neutral', 'Negative'],
+            datasets: [{ data: [countsSent.Positive, countsSent.Neutral, countsSent.Negative], backgroundColor: ['#22c55e','#eab308','#ef4444'], hoverOffset: 10 }]
+          },
+          options: { plugins: { legend: { labels: { color: '#cbd5e1' } } } }
+        });
+      }
+
       // summary text (simple heuristics)
       let summary = 'No clear trend.';
       const summaryEl = $('#summaryText');
@@ -1165,6 +1239,27 @@
       const decisionsCard = document.getElementById('decisionsCard');
       if(decisionsCard){
         decisionsCard.style.display = (userRole === 'official') ? 'block' : 'none';
+      }
+
+      // Populate modern table
+      const tableBody = document.querySelector('#mdCommentsTable tbody');
+      if(tableBody){
+        tableBody.innerHTML = '';
+        const rows = filtered.slice(0, 15);
+        rows.forEach(c => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${c.name}</td><td class="${c.sentiment.toLowerCase()}">${c.sentiment}</td><td title="${c.text}">${c.text}</td>`;
+          tableBody.appendChild(tr);
+        });
+        // counters
+        const mdPos = document.getElementById('mdPos');
+        const mdNeu = document.getElementById('mdNeu');
+        const mdNeg = document.getElementById('mdNeg');
+        const mdTotal = document.getElementById('mdTotal');
+        if(mdPos) mdPos.textContent = String(countsSent.Positive);
+        if(mdNeu) mdNeu.textContent = String(countsSent.Neutral);
+        if(mdNeg) mdNeg.textContent = String(countsSent.Negative);
+        if(mdTotal) mdTotal.textContent = String(filtered.length);
       }
     }
 
