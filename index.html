@@ -148,6 +148,9 @@
       gap:18px;
       align-items:start;
     }
+    .sections-grid{ display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; align-items:start; }
+    @media (max-width:1400px){ .sections-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media (max-width:980px){ .sections-grid{ grid-template-columns: 1fr; } }
 
     /* Left main card */
     .card{
@@ -498,6 +501,7 @@
     <div class="grid" style="margin-top:18px;">
       <!-- left column -->
       <div>
+        <div class="sections-grid">
         <div id="consult-view" class="card" style="display:none;">
           <h2 style="margin-top:0">e-Consultation — Recent Amendments</h2>
           <p class="small muted">Click an amendment to add comments and upload supporting files. Submissions are analyzed and reflected in the dashboard.</p>
@@ -659,6 +663,7 @@
             </div>
           </div>
         </div>
+        </div><!-- /.sections-grid -->
       </div>
 
       <!-- right column -->
