@@ -1,0 +1,1911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Manobhava — e-Consultation MVP</title>
+
+  <link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#2b7fb6" />
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(()=>{});
+      });
+    }
+  </script>
+
+  <style>
+    :root{
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #2b7fb6;
+      --accent-2: #17b897;
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+      --glass: rgba(17,24,39,0.7);
+      --pill: rgba(59,130,246,0.18);
+      --soft: #0f172a;
+      --shadow: 0 6px 18px rgba(0,0,0,0.45);
+      --radius: 12px;
+      --border: #334155;
+      --bg-gradient: linear-gradient(180deg, #0f172a, #0f172a);
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    [data-theme="dark"]{
+      --bg: #0f172a;
+      --card: #1e293b;
+      --accent: #2b7fb6;
+      --accent-2: #17b897;
+      --muted: #94a3b8;
+      --text: #e2e8f0;
+      --glass: rgba(17,24,39,0.7);
+      --pill: rgba(59,130,246,0.18);
+      --soft: #0f172a;
+      --shadow: 0 6px 18px rgba(0,0,0,0.45);
+      --border: #334155;
+      --bg-gradient: linear-gradient(180deg, #0f172a, #0f172a);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: var(--bg-gradient);
+      color: var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      min-height:100vh;
+    }
+
+    /* NAV */
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:18px 32px;
+      gap:12px;
+      position:sticky;
+      top:0;
+      background:#1e293b;
+      border-bottom:1px solid var(--border);
+      z-index:50;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+    }
+    .logo{
+      height:48px;
+      width:48px;
+      border-radius:10px;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:white;
+      font-weight:600;
+      box-shadow:var(--shadow);
+    }
+    .site-title{
+      font-size:20px;
+      font-weight:700;
+      letter-spacing:0.6px;
+    }
+    nav a{
+      margin:0 10px;
+      color:var(--muted);
+      text-decoration:none;
+      padding:8px 12px;
+      border-radius:8px;
+    }
+    nav a.active, nav a:hover{
+      background:var(--pill);
+      color:var(--accent);
+      font-weight:600;
+    }
+    .right-actions{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .role-badge{
+      background:var(--pill);
+      color:var(--accent);
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:600;
+    }
+    .btn{
+      padding:8px 14px;
+      background:var(--accent);
+      color:white;
+      border-radius:10px;
+      border:none;
+      font-weight:600;
+      cursor:pointer;
+      box-shadow: 0 8px 20px rgba(43,127,182,0.18);
+    }
+    .btn.ghost{
+      background:transparent;
+      color:var(--accent);
+      border:1px solid rgba(43,127,182,0.12);
+      box-shadow:none;
+    }
+
+    /* Layout */
+    .container{
+      width:96%;
+      max-width:1600px;
+      margin:28px auto;
+      padding: 0 8px;
+    }
+    /* Expand dashboard to true full-screen layout */
+    body.dashboard-view .container{
+      width:100%;
+      max-width:none;
+      margin:0;
+      padding:0;
+    }
+    body.dashboard-view .grid{ margin-top:0 !important; }
+    body.dashboard-view .sections-grid{ grid-template-columns: 1fr; gap:0; }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:18px;
+      align-items:start;
+    }
+    .sections-grid{ display:grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap:12px; align-items:start; }
+    @media (max-width:1400px){ .sections-grid{ grid-template-columns: repeat(2, minmax(0,1fr)); } }
+    @media (max-width:980px){ .sections-grid{ grid-template-columns: 1fr; } }
+
+    /* Left main card */
+    .card{
+      background:var(--card);
+      border-radius:var(--radius);
+      padding:20px;
+      box-shadow:var(--shadow);
+      border:1px solid var(--border);
+    }
+    h1.title{
+      margin:0 0 8px;
+      font-size:22px;
+    }
+    p.lead{
+      margin:0 0 18px;
+      color:var(--muted);
+    }
+
+    /* Amendments list */
+    .amendments{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .amendment{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px;
+      border-radius:10px;
+      border:1px solid rgba(15,23,42,0.08);
+      background:linear-gradient(180deg, var(--card), rgba(255,255,255,0.02));
+    }
+    .amendment .meta{
+      display:flex;
+      gap:14px;
+      align-items:center;
+    }
+    .amendment .meta .tag{
+      background:var(--soft);
+      padding:6px 10px;
+      border-radius:8px;
+      font-weight:700;
+      color:var(--accent);
+      font-size:13px;
+    }
+    .amendment .meta .title{
+      font-weight:700;
+    }
+    .amendment .date{
+      color:var(--muted);
+      font-size:13px;
+    }
+    .amendment .actions button{
+      margin-left:8px;
+      padding:8px 12px;
+      border-radius:8px;
+      border:none;
+      cursor:pointer;
+      background:var(--accent-2);
+      color:white;
+      font-weight:600;
+    }
+
+    /* Right panel: brief + stats */
+    .side{ display:none !important; }
+    .side .about{
+      padding:16px;
+      border-radius:10px;
+      background: linear-gradient(90deg, rgba(43,127,182,0.06), rgba(43,179,143,0.04));
+      grid-column: 1 / -1;
+    }
+    .small{
+      font-size:13px;
+      color:var(--muted);
+    }
+
+    /* Comment drawer (hidden panel) */
+    .drawer{
+      position:fixed;
+      right:20px;
+      top:96px;
+      width:420px;
+      max-width:92%;
+      transform: translateX(110%);
+      transition: transform .32s cubic-bezier(.2,.9,.2,1);
+      z-index:80;
+    }
+    .drawer.open{
+      transform: translateX(0%);
+    }
+    .drawer .card{
+      padding:18px;
+      height:calc(100vh - 160px);
+      overflow:auto;
+    }
+    .input, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:8px;
+      border:1px solid rgba(15,23,42,0.06);
+      font-size:14px;
+      resize:vertical;
+    }
+    .file-input{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top:8px;
+    }
+    .muted{
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .analyze-btn{
+      margin-top:12px;
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:none;
+      background:var(--accent);
+      color:white;
+      font-weight:700;
+      cursor:pointer;
+    }
+
+    /* ASHA field app */
+    .asha-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:14px;
+    }
+    .queue-item{
+      border:1px solid rgba(15,23,42,0.06);
+      border-radius:10px;
+      padding:10px;
+      background:linear-gradient(180deg, #fff, #fbfdff);
+    }
+    .badge{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:12px;
+      background:var(--pill);
+      color:var(--accent);
+    }
+
+    /* Dashboard Section (hidden by default) */
+    #dashboard{
+      margin-top:20px;
+      display:none;
+    }
+    /* New MCA dashboard styling (scoped) */
+    #dashboard.card{ background:#0f172a; color:#e2e8f0; border:none; border-radius:0; box-shadow:none; padding:0; min-height:calc(100vh - 96px); }
+    #mcaDash{ display:flex; flex-direction:column; gap:14px; padding:16px; max-width:1280px; margin:0 auto; }
+    #mcaDash .top-row{ display:flex; flex-wrap:wrap; gap:14px; }
+    #mcaDash .card{ background-color:#1e293b; border:1px solid #334155; border-radius:10px; padding:16px; flex:1; min-width:240px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    #mcaDash .card h2{ font-size:14px; color:#93c5fd; margin:0 0 8px; }
+    #mcaDash .stats{ display:flex; flex-direction:column; gap:5px; }
+    #mcaDash .positive{ color:#22c55e; }
+    #mcaDash .neutral{ color:#eab308; }
+    #mcaDash .negative{ color:#ef4444; }
+    #mcaDash .chart-container{ flex:1; min-width:260px; text-align:center; }
+    #mcaDash .filter{ display:flex; align-items:center; justify-content:space-between; background-color:#1e293b; padding:15px; border-radius:10px; border:1px solid #334155; }
+    #mcaDash .filter input{ width:60%; padding:8px; border-radius:5px; border:none; outline:none; background-color:#334155; color:#e2e8f0; }
+    #mcaDash .filter button{ background-color:#3b82f6; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; }
+    #mcaDash .filter button:hover{ background-color:#2563eb; }
+    #mcaDash table{ width:100%; border-collapse:collapse; margin-top:8px; background-color:#1e293b; border-radius:10px; overflow:hidden; border:1px solid #334155; }
+    #mcaDash th, #mcaDash td{ padding:10px 8px; text-align:left; border-bottom:1px solid #334155; }
+    #mcaDash th{ color:#93c5fd; background-color:#0f172a; }
+    #mcaDash tr:hover{ background-color:#334155; }
+    .dash-grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:18px;
+      align-items:start;
+    }
+    .dash-grid .card{ min-width:0; }
+    .dash-grid .wide{ grid-column: 1 / -1; }
+    @media (max-width: 980px){
+      .dash-grid{
+        grid-template-columns: 1fr;
+        gap:12px;
+      }
+    }
+    .cloud{
+      min-height:300px;
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:16px;
+      border-radius:10px;
+      background:linear-gradient(180deg, var(--card), rgba(255,255,255,0.02));
+      border:1px solid rgba(15,23,42,0.08);
+    }
+    .cloud .token{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:8px;
+      user-select:none;
+      cursor:pointer;
+      transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.04);
+      opacity: 0.95;
+    }
+    .cloud .token:hover{ transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
+    .cloud .token.active{ outline:2px solid var(--accent); outline-offset:2px; }
+
+    /* KPI row */
+    .kpis{ display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; }
+    .kpi{ background:linear-gradient(180deg, var(--card), rgba(255,255,255,0.02)); border:1px solid rgba(15,23,42,0.08); border-radius:10px; padding:12px; }
+    .kpi .label{ color:var(--muted); font-size:12px; }
+    .kpi .value{ font-weight:800; font-size:24px; margin-top:4px; }
+
+    /* Chips */
+    .chips{ display:flex; gap:8px; flex-wrap:wrap; }
+    .chip{ border:1px solid rgba(15,23,42,0.1); background:var(--card); color:var(--text); padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; }
+    .chip.active{ border-color: var(--accent); color: var(--accent); background: var(--pill); }
+
+    /* Tabs */
+    .tabs{ display:flex; gap:6px; }
+    .tab{ border:1px solid rgba(15,23,42,0.1); background:var(--card); color:var(--text); padding:6px 10px; border-radius:8px; font-size:12px; cursor:pointer; }
+    .tab.active{ border-color: var(--accent); color: var(--accent); background: var(--pill); }
+
+    /* Modern dashboard (dark-in-card) */
+    .modern-dashboard{ background-color:#0f172a; color:#e2e8f0; border-radius:10px; padding:12px; }
+    .modern-dashboard .top-row{ display:flex; flex-wrap:wrap; gap:12px; }
+    .modern-dashboard .md-card{ background-color:#1e293b; border:1px solid #334155; border-radius:10px; padding:16px; flex:1; min-width:260px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    .modern-dashboard .md-card h3{ color:#93c5fd; margin:0 0 8px; font-size:16px; }
+    .modern-dashboard .stats{ display:flex; flex-direction:column; gap:6px; }
+    .modern-dashboard .positive{ color:#22c55e }
+    .modern-dashboard .neutral{ color:#eab308 }
+    .modern-dashboard .negative{ color:#ef4444 }
+    .modern-dashboard .filterbar{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:#1e293b; padding:0; border-radius:10px; }
+    .modern-dashboard .filterbar input{ flex:1; padding:8px 10px; border-radius:6px; border:none; outline:none; background:#334155; color:#e2e8f0; }
+    .modern-dashboard .filterbar button{ background:#3b82f6; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; }
+    .modern-dashboard .filterbar button:hover{ background:#2563eb }
+    .modern-dashboard table{ width:100%; border-collapse:collapse; margin-top:8px; background:#1e293b; border-radius:10px; overflow:hidden; }
+    .modern-dashboard th, .modern-dashboard td{ padding:10px; border-bottom:1px solid #334155; text-align:left; }
+    .modern-dashboard th{ color:#93c5fd; background:#0f172a }
+    .modern-dashboard tr:hover{ background:#334155 }
+
+    /* footer */
+    footer{
+      margin:36px auto;
+      text-align:center;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    /* small utilities */
+    .center{
+      text-align:center;
+    }
+    .loader{
+      display:inline-block;
+      width:22px;
+      height:22px;
+      border-radius:50%;
+      border:3px solid rgba(0,0,0,0.08);
+      border-top-color:var(--accent);
+      animation:spin 1s linear infinite;
+      vertical-align:middle;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Toasts */
+    #toastContainer{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      z-index: 300;
+    }
+    .toast{
+      padding:10px 12px;
+      border-radius:10px;
+      box-shadow: var(--shadow);
+      background:#fff;
+      border:1px solid rgba(15,23,42,0.06);
+      font-size:14px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      opacity:0.98;
+    }
+    .toast.success{ border-color: rgba(43,179,143,0.3); background: #eef8f6; }
+    .toast.error{ border-color: rgba(255,122,122,0.35); background: #fff2f2; }
+    .toast.info{ border-color: rgba(43,127,182,0.3); background: #eef6fb; }
+    .toast.warn{ border-color: rgba(245,158,11,0.35); background: #fff7ed; }
+
+    /* Home tiles */
+    .tiles{ display:grid; gap:12px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+    .tile{ background:var(--card); border:1px solid rgba(15,23,42,0.08); border-radius:12px; padding:16px; box-shadow:var(--shadow); transition: transform .2s ease, box-shadow .2s ease; }
+    .tile:hover{ transform: translateY(-2px); box-shadow: 0 10px 22px rgba(23,35,60,0.12); }
+    .tile .heading{ font-weight:700; display:flex; align-items:center; gap:8px; }
+    .tile .desc{ color:var(--muted); margin:6px 0 10px; font-size:14px; }
+    .tile .actions button{ margin-right:8px; }
+
+    /* Aside info blocks */
+    ul.checklist{ list-style:none; padding-left:0; margin:8px 0; }
+    ul.checklist li{ margin:6px 0; display:flex; align-items:flex-start; gap:8px; }
+    ul.checklist li::before{ content:'✓'; color:var(--accent-2); font-weight:700; line-height:1.2; }
+    .stat-grid{ display:grid; grid-template-columns: 1fr auto; column-gap:12px; row-gap:6px; }
+    .stat-grid .label{ color:var(--muted); }
+    .stat-grid .value{ font-weight:700; }
+
+    /* Home info tiles visibility */
+    .info-tiles{ display:none; }
+    .view-home .info-tiles{ display:grid; }
+    .view-home .grid{ grid-template-columns: 1fr; }
+    .view-home .side{ display:none; }
+
+    /* responsive */
+    @media (max-width:980px){
+      .grid{grid-template-columns:1fr}
+      .dash-grid{ grid-template-columns: 1fr; }
+      .drawer{left:50%; transform:translateX(-50%); right:auto; bottom:12px; top:auto; width:92%}
+      .side{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="logo">M</div>
+      <div>
+        <div class="site-title">Manobhava</div>
+        <div class="small muted">AI-assisted e‑Consultation</div>
+      </div>
+    </div>
+
+    <nav>
+      <a href="#" class="nav-link active" data-view="home" data-role="all">Home</a>
+      <a href="#" class="nav-link" data-view="consult" data-role="citizen">e-Consultation</a>
+      <a href="#" class="nav-link" data-view="asha" data-role="asha" style="display:none;">ASHA Field App</a>
+      <a href="#" class="nav-link" data-view="dashboard" data-role="official" style="display:none;">Official Dashboard</a>
+    </nav>
+
+    <div class="right-actions">
+      <span id="roleBadge" class="role-badge" style="display:none;"></span>
+      <button class="btn ghost" id="themeToggle" title="Toggle theme">Dark</button>
+      <button class="btn ghost" id="demoLoginBtn">Login</button>
+      <button class="btn ghost" id="logoutBtn" style="display:none;">Logout</button>
+      
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Top Intro -->
+    <section id="home-view" class="card">
+      <h1 class="title">Manobhava — Transparent & efficient public consultation</h1>
+      <p class="lead">Collect submissions from citizens and ASHA workers, analyze sentiment and keywords, and empower officials with clear insights for decisions.</p>
+
+      <div class="tiles" style="margin-top:8px;">
+        <div class="tile">
+          <div class="heading">Citizen</div>
+          <div class="desc">Submit comments and optional files on draft amendments.</div>
+          <div class="actions">
+            <button class="btn" data-view-link="consult">Open e‑Consultation</button>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="heading">ASHA Worker</div>
+          <div class="desc">Record village feedback offline in any language; auto‑convert to English.</div>
+          <div class="actions">
+            <button class="btn" data-view-link="asha">Open Field App</button>
+          </div>
+        </div>
+        <div class="tile">
+          <div class="heading">Official</div>
+          <div class="desc">View analytics, summaries, and capture decision notes.</div>
+          <div class="actions">
+            <!-- Dashboard disabled: hide hero button entirely -->
+            <button class="btn ghost" id="heroOpenDashboard" style="display:none;" aria-hidden="true">Open Dashboard</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tiles info-tiles" style="margin-top:12px;">
+        <div class="tile">
+          <div class="heading">How it works</div>
+          <ul class="small muted" style="padding-left:18px; margin:8px 0; line-height:1.8;">
+            <li>Citizens submit comments for each amendment</li>
+            <li>ASHA workers collect voice feedback in villages</li>
+            <li>Voice is transcribed and translated to English</li>
+            <li>Officials see word cloud, sentiment, and notes</li>
+          </ul>
+        </div>
+        <div class="tile">
+          <div class="heading">About Manobhava</div>
+          <div class="desc">A solution to collect and analyze regulator feedback quickly. The dashboard is interactive and can be connected to a secure back‑end.</div>
+          <div class="small muted" style="font-weight:700; margin-top:8px;">What you can demo</div>
+          <ul class="checklist">
+            <li><span class="small muted">Submit comment & file for an amendment</span></li>
+            <li><span class="small muted">Instant analysis → word cloud + sentiment chart</span></li>
+            <li><span class="small muted">View recent comments and quick summary</span></li>
+          </ul>
+        </div>
+        <div class="tile">
+          <div class="heading">Quick stats</div>
+          <div class="stat-grid" style="margin-top:10px;">
+            <div class="label small">Amendments listed</div><div class="value" id="statCount">0</div>
+            <div class="label small">Comments submitted</div><div class="value" id="statComments">0</div>
+            <div class="label small">Mode</div><div class="value">Front‑end MVP</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="grid" style="margin-top:18px;">
+      <!-- left column -->
+      <div>
+        <div class="sections-grid">
+        <div id="consult-view" class="card" style="display:none;">
+          <h2 style="margin-top:0">e-Consultation — Recent Amendments</h2>
+          <p class="small muted">Click an amendment to add comments and upload supporting files. Submissions are analyzed and reflected in the dashboard.</p>
+
+          <div class="amendments" id="amendmentsList">
+            <!-- Amendments inserted by JS -->
+          </div>
+          <div class="small muted" style="margin-top:10px;">Characters: <span id="commentCharCount">0</span>/500</div>
+        </div>
+
+        <div id="dashboard" class="card" style="display:none;">
+          <div id="mcaDash">
+            <div class="top-row">
+              <div class="card">
+                <h2>Sentiment Counts</h2>
+                <div class="stats">
+                  <div class="positive">Positive: 0</div>
+                  <div class="neutral">Neutral: 0</div>
+                  <div class="negative">Negative: 0</div>
+                  <div>Total: 0</div>
+                </div>
+              </div>
+
+              <div class="card">
+                <h2>Quick Filters</h2>
+                <div class="filter">
+                  <input type="text" id="filterInput" placeholder="Search name, role, comment..." />
+                  <button id="mcaClear" onclick="clearFilter()">Clear</button>
+                </div>
+                <small style="color:#94a3b8;">Tip: Click on truncated cells to view full content.</small>
+              </div>
+
+              <div class="card chart-container">
+                <h2>Sentiment Distribution</h2>
+                <canvas id="sentimentChart"></canvas>
+                <p style="font-size: 13px; color:#94a3b8;">Shows Positive / Neutral / Negative split.</p>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>Comments Summary</h2>
+              <table id="commentsTable">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Sentiment</th>
+                    <th>Original Comment</th>
+                    <th>Reason / Short Comment</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ASHA Field App View -->
+        <div id="asha-view" class="card" style="display:none;">
+          <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div>
+              <h2 style="margin:0">ASHA Field App — Offline</h2>
+              <div class="small muted">Record voice opinions in villages, queue offline, and sync later.</div>
+            </div>
+            <span class="badge">Offline-ready</span>
+          </div>
+
+          <div class="asha-grid" style="margin-top:12px;">
+            <div class="card" style="padding:14px;">
+              <h3 style="margin:0 0 8px">New Voice Capture</h3>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label class="small muted">Amendment</label>
+                <select id="ashaAmendSelect" class="input" style="width:auto; padding:6px 10px;"></select>
+                <label class="small muted">Village</label>
+                <input id="ashaVillage" class="input" placeholder="e.g., Rampur" style="width:180px;" />
+              </div>
+
+              <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+                <button class="btn" id="startRecBtn">Start Recording</button>
+                <button class="btn ghost" id="stopRecBtn" disabled>Stop</button>
+                <span id="recStatus" class="small muted">Idle</span>
+              </div>
+
+              <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label class="small muted" style="display:flex; align-items:center; gap:6px;">
+                  <input type="checkbox" id="autoTranscribe" /> Auto‑transcribe (beta)
+                </label>
+                <label class="small muted">Lang</label>
+                <select id="sttLang" class="input" style="width:auto; padding:6px 10px;">
+                  <option value="en-IN" selected>English (India)</option>
+                  <option value="en-US">English (US)</option>
+                  <option value="hi-IN">Hindi (India)</option>
+                  <option value="kn-IN">Kannada (India)</option>
+                </select>
+                <span id="sttStatus" class="small muted">STT: Off</span>
+              </div>
+
+              <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label class="small muted" style="display:flex; align-items:center; gap:6px;">
+                  <input type="checkbox" id="useCloudSTT" /> Cloud Whisper (API)
+                </label>
+                <span id="cloudSttStatus" class="small muted">Cloud: Off</span>
+              </div>
+              <div id="cloudCfg" style="display:none; margin-top:8px;">
+                <input id="transcribeEndpoint" class="input" placeholder="Transcribe API endpoint (POST)" />
+                <input id="transcribeApiKey" class="input" placeholder="Bearer token (optional)" style="margin-top:8px;" />
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                  <button class="btn ghost" id="saveTranscribeCfgBtn">Save API Settings</button>
+                </div>
+                <div class="small muted" style="margin-top:6px;">Expected response: { text: "..." } or { text_en: "..." }</div>
+              </div>
+
+              <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <label class="small muted" style="display:flex; align-items:center; gap:6px;">
+                  <input type="checkbox" id="useTranslate" /> Translate transcription to English (API)
+                </label>
+                <span id="translateStatus" class="small muted">Translate: Off</span>
+              </div>
+              <div id="translateCfg" style="display:none; margin-top:8px;">
+                <input id="translateEndpoint" class="input" placeholder="Translate API endpoint (POST)" />
+                <input id="translateApiKey" class="input" placeholder="Bearer token (optional)" style="margin-top:8px;" />
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                  <button class="btn ghost" id="saveTranslateCfgBtn">Save Translate Settings</button>
+                </div>
+                <div class="small muted" style="margin-top:6px;">Request: { text: "...", target_lang: "en" } → Response { text: "..." }</div>
+              </div>
+
+              <div id="sttPreviewWrap" style="margin-top:10px;">
+                <label class="small muted">Live transcript preview</label>
+                <textarea id="sttPreview" class="input" rows="3" placeholder="Speech-to-text preview..." readonly></textarea>
+              </div>
+            </div>
+
+            <div class="card" style="padding:14px;">
+              <h3 style="margin:0 0 8px">Queued Items</h3>
+              <div class="small muted">Add a short transcription before syncing to analysis.</div>
+              <div style="display:flex; gap:8px; margin:10px 0;">
+                <button class="btn" id="syncAllBtn">Sync All</button>
+                <button class="btn ghost" id="clearQueueBtn">Clear Queue</button>
+              </div>
+              <div id="ashaQueueList" style="display:flex; flex-direction:column; gap:10px;"></div>
+            </div>
+          </div>
+        </div>
+        </div><!-- /.sections-grid -->
+      </div>
+
+      <!-- right column -->
+      <aside class="side">
+        <div class="card about">
+          <strong>About Manobhava</strong>
+          <div class="small muted" style="margin-top:8px;">
+            A solution to collect and analyze regulator feedback quickly. The dashboard is interactive and can be connected to a secure back‑end.
+          </div>
+          <div style="margin-top:10px;">
+            <div class="small muted" style="font-weight:700; margin-bottom:6px;">What you can demo</div>
+            <ul class="checklist">
+              <li><span class="small muted">Submit comment & file for an amendment</span></li>
+              <li><span class="small muted">Instant analysis → word cloud + sentiment chart</span></li>
+              <li><span class="small muted">View recent comments and quick summary</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="card" style="padding:14px;">
+          <strong>Quick stats</strong>
+          <div class="stat-grid" style="margin-top:10px;">
+            <div class="label small">Amendments listed</div><div class="value" id="statCount">0</div>
+            <div class="label small">Comments submitted</div><div class="value" id="statComments">0</div>
+            <div class="label small">Mode</div><div class="value">Front‑end MVP</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:14px;">
+          <strong>Notes</strong>
+          <p class="small muted" style="margin-top:8px;">For production, connect submissions to a secure backend and replace the lexicon sentiment with an ML model.</p>
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      © Manobhava — demo prototype • Built for judges & demonstration
+    </footer>
+  </main>
+  <!-- Toast container -->
+  <div id="toastContainer" aria-live="polite"></div>
+
+  <!-- Comment Drawer Panel -->
+  <div class="drawer" id="commentDrawer" aria-hidden="true">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h3 id="drawerTitle" style="margin:0">Add Comment</h3>
+          <div class="muted" id="drawerSub">For amendment</div>
+        </div>
+        <div>
+          <button class="btn ghost" id="closeDrawer">Close</button>
+        </div>
+      </div>
+
+      <hr style="margin:12px 0 14px; border:none; border-top:1px solid rgba(15,23,42,0.04)">
+
+      <label class="small muted">Your name</label>
+      <input id="commentName" class="input" placeholder="e.g., A. Sharma (Citizen)" />
+
+      <label class="small muted" style="margin-top:10px;">Comment</label>
+      <textarea id="commentText" rows="6" class="input" placeholder="Write your feedback here..."></textarea>
+
+      <div class="file-input">
+        <input id="fileUpload" type="file" />
+        <div class="muted small">Upload supporting file (pdf/doc) — optional</div>
+      </div>
+
+      <button class="analyze-btn" id="submitComment">Submit & Analyze</button>
+
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <div class="muted small">Tip: Your comment will be shown on the demo dashboard (no external storage).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login Modal (visual demo only) -->
+  <div id="loginModal" style="display:none; position:fixed; left:0; top:0; right:0; bottom:0; background:rgba(10,15,20,0.35); z-index:120; align-items:center; justify-content:center;">
+    <div class="card" style="width:420px; padding:18px;">
+      <h3 style="margin-top:0">Login to Manobhava</h3>
+      <div class="muted small">Choose role — Official / ASHA / Citizen</div>
+      <div style="margin-top:12px;">
+        <input class="input" id="loginEmail" type="email" placeholder="Email" autocomplete="email" required />
+        <input class="input" id="loginPass" type="password" placeholder="Password" style="margin-top:8px;" autocomplete="current-password" required />
+        <select class="input" id="loginRole" style="margin-top:8px;">
+          <option value="official">Official</option>
+          <option value="asha">ASHA Worker</option>
+          <option value="citizen" selected>Citizen</option>
+        </select>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn" id="loginBtn">Login</button>
+          <button class="btn ghost" id="closeLogin">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*************
+     * Demo data
+     *************/
+    const demoAmendments = [
+      { id: 'A1', title: 'Draft: Amend Companies Act - Clause 34', date: '2025-09-10', desc: 'Clarifies disclosures under Clause 34, aiming to improve transparency while reducing ambiguity for small enterprises.' },
+      { id: 'A2', title: 'Draft: New Rules for Corporate Governance', date: '2025-09-22', desc: 'Updates board independence requirements, whistleblower protections, and reporting standards for listed entities.' },
+      { id: 'A3', title: 'Draft: Changes to Annual Filing Requirement', date: '2025-08-30', desc: 'Streamlines annual return formats and introduces optional digital attestations for MSMEs.' },
+      { id: 'A4', title: 'Draft: Small Company Threshold Adjustment', date: '2025-09-15', desc: 'Revises paid-up capital and turnover thresholds to broaden small company benefits.' }
+    ];
+
+    // In-memory storage for demo comments
+    let commentsStore = [];
+    let decisionsStore = {};
+    let ashaQueue = [];
+
+    // Role state
+    let userRole = localStorage.getItem('userRole') || 'guest';
+
+    // Selection state for dashboard filter
+    let selectedAmendmentId = localStorage.getItem('dashboardFilter') || 'all';
+
+    /*************
+     * Helpers
+     *************/
+    function $(sel){ return document.querySelector(sel) }
+    function $all(sel){ return Array.from(document.querySelectorAll(sel)) }
+
+    // Basic tokenizer
+    function tokenize(text){
+      return text
+        .toLowerCase()
+        .replace(/[^\w\s]/g,' ')
+        .split(/\s+/)
+        .filter(Boolean)
+        .map(w => w.trim())
+    }
+
+    // naive sentiment scoring with small lexicon (demo only)
+    const positiveWords = new Set(['good','helpful','support','agree','positive','benefit','fair','transparent','improve','improved','clarify','clarity','effective','efficient','strong','protect','safe']);
+    const negativeWords = new Set(['bad','concern','harm','negative','oppose','against','unfair','expensive','difficult','problem','risk','confusing','remove','reduce','worse','delay']);
+
+    function analyzeSentiment(text){
+      const tokens = tokenize(text);
+      let score = 0;
+      tokens.forEach(t => {
+        if (positiveWords.has(t)) score += 1;
+        if (negativeWords.has(t)) score -= 1;
+      });
+      if (score > 0) return 'Positive';
+      if (score < 0) return 'Negative';
+      return 'Neutral';
+    }
+
+    /*************
+     * Populate amendments list
+     *************/
+    const amendmentsListEl = $('#amendmentsList');
+    function renderAmendments(){
+      if(!amendmentsListEl) return;
+      amendmentsListEl.innerHTML = '';
+      demoAmendments.forEach(am => {
+        const el = document.createElement('div');
+        el.className = 'amendment';
+        el.innerHTML = `
+          <div class="meta">
+            <div class="tag">${am.id}</div>
+            <div>
+              <div class="title">${am.title}</div>
+              <div class="date">${am.date}</div>
+            </div>
+          </div>
+          <div class="actions">
+            <button data-id="${am.id}" class="btn open-comment">Comment</button>
+            <button data-id="${am.id}" class="btn ghost view-comments">View</button>
+            <button data-id="${am.id}" class="btn ghost details">Details</button>
+          </div>
+        `;
+        amendmentsListEl.appendChild(el);
+      });
+      const statCountEl = $('#statCount');
+      if (statCountEl) statCountEl.textContent = demoAmendments.length;
+    }
+    renderAmendments();
+
+    // Initialize dashboard filter UI
+    function initDashboardFilter(){
+      const selectEl = document.getElementById('amendmentFilter');
+      if(!selectEl) return;
+      selectEl.innerHTML = '';
+      const optAll = new Option('All amendments', 'all');
+      selectEl.add(optAll);
+      demoAmendments.forEach(a => {
+        const label = `${a.id} — ${a.title}`;
+        selectEl.add(new Option(label, a.id));
+      });
+      selectEl.value = selectedAmendmentId;
+      updateFilterBadge();
+      selectEl.addEventListener('change', () => {
+        selectedAmendmentId = selectEl.value || 'all';
+        localStorage.setItem('dashboardFilter', selectedAmendmentId);
+        renderDashboard();
+      });
+    }
+
+    function updateFilterBadge(){
+      const badge = document.getElementById('filterBadge');
+      if(!badge) return;
+      if(selectedAmendmentId === 'all'){
+        badge.textContent = 'Showing: All amendments';
+      } else {
+        const am = demoAmendments.find(a => a.id === selectedAmendmentId);
+        badge.textContent = `Showing: ${am ? am.id + ' — ' + am.title : selectedAmendmentId}`;
+      }
+    }
+
+    initDashboardFilter();
+
+    function initDecisionSelect(){
+      const sel = document.getElementById('decisionAmendSelect');
+      if(!sel) return;
+      sel.innerHTML = '';
+      demoAmendments.forEach(a => sel.add(new Option(`${a.id} — ${a.title}`, a.id)));
+    }
+
+    /*************
+     * Drawer open/close
+     *************/
+    let currentAmendment = null;
+    function openDrawer(am){
+      currentAmendment = am;
+      $('#commentDrawer').classList.add('open');
+      $('#drawerTitle').textContent = `Add comment — ${am.title}`;
+      $('#drawerSub').textContent = am.date;
+      $('#commentText').value = '';
+      $('#commentName').value = '';
+      $('#fileUpload').value = '';
+      document.getElementById('commentDrawer').setAttribute('aria-hidden','false');
+    }
+    function closeDrawer(){
+      currentAmendment = null;
+      $('#commentDrawer').classList.remove('open');
+      document.getElementById('commentDrawer').setAttribute('aria-hidden','true');
+    }
+
+    document.addEventListener('click', (e)=>{
+      const openBtn = e.target.closest && e.target.closest('.open-comment');
+      const viewBtn = e.target.closest && e.target.closest('.view-comments');
+      const detBtn = e.target.closest && e.target.closest('.details');
+      if(openBtn){
+        const id = openBtn.dataset.id;
+        const am = demoAmendments.find(a=>a.id===id);
+        openDrawer(am);
+      }
+      if(viewBtn){
+        const id = viewBtn.dataset.id;
+        const thisComments = commentsStore.filter(c=>c.amendId===id);
+        showCommentsModal(id, thisComments);
+      }
+      if(detBtn){
+        const id = detBtn.dataset.id;
+        const am = demoAmendments.find(a=>a.id===id);
+        if(am) showAmendmentDetails(am);
+      }
+    });
+    const closeDrawerBtn = $('#closeDrawer');
+    if(closeDrawerBtn) closeDrawerBtn.addEventListener('click', closeDrawer);
+
+    /*************
+     * Submit & analyze
+     *************/
+    const submitBtn = $('#submitComment');
+    if(submitBtn) submitBtn.addEventListener('click', ()=> {
+      const name = ($('#commentName').value || '').trim() || 'Anonymous';
+      const text = ($('#commentText').value || '').trim();
+      const file = $('#fileUpload').files && $('#fileUpload').files[0] ? $('#fileUpload').files[0].name : null;
+
+      if(!currentAmendment){ toast('No amendment selected','error'); return; }
+      if(!text){ toast('Please write a comment before submitting.','warn'); return; }
+      if(text.length < 20){ toast('Comment too short (min 20 characters).','warn'); return; }
+
+      const btn = $('#submitComment');
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<span class="loader"></span> Analyzing...`;
+      btn.disabled = true;
+
+      setTimeout(()=> {
+        const sentiment = analyzeSentiment(text);
+        const record = {
+          id: 'C' + Math.floor(Math.random()*90000+10000),
+          name, text, file, sentiment,
+          amendId: currentAmendment.id,
+          amendTitle: currentAmendment.title,
+          date: new Date().toISOString().slice(0,10)
+        };
+        commentsStore.unshift(record);
+        btn.innerHTML = orig;
+        btn.disabled = false;
+        closeDrawer();
+
+        // increment stat
+        const statCommentsEl = $('#statComments');
+        if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
+
+      // Navigate to dashboard and render for officials
+      selectedAmendmentId = currentAmendment.id;
+      localStorage.setItem('dashboardFilter', selectedAmendmentId);
+      if(userRole === 'official'){
+        showView('dashboard');
+        renderDashboard();
+      } else {
+        toast('Comment submitted for review.','success');
+      }
+      }, 900);
+    });
+
+    /*************
+     * Dashboard rendering
+     *************/
+    let sentChart = null;
+    function renderDashboard(){
+      // compute filtered comments
+      const isAll = selectedAmendmentId === 'all';
+      const filtered = isAll ? commentsStore : commentsStore.filter(c => c.amendId === selectedAmendmentId);
+
+      // Sentiment counts
+      const countsSent = { Positive:0, Neutral:0, Negative:0 };
+      filtered.forEach(c => { countsSent[c.sentiment] = (countsSent[c.sentiment]||0)+1 });
+      const totals = countsSent.Positive + countsSent.Neutral + countsSent.Negative;
+      const countsBox = document.querySelector('#mcaDash .stats');
+      if(countsBox){
+        countsBox.innerHTML = `
+          <div class="positive">Positive: ${countsSent.Positive}</div>
+          <div class="neutral">Neutral: ${countsSent.Neutral}</div>
+          <div class="negative">Negative: ${countsSent.Negative}</div>
+          <div>Total: ${totals}</div>
+        `;
+      }
+
+      // Doughnut chart
+      const ctxEl = document.getElementById('sentimentChart');
+      if(ctxEl && window.Chart){
+        const ctx = ctxEl.getContext('2d');
+        if(sentChart) sentChart.destroy();
+        sentChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Positive', 'Neutral', 'Negative'],
+            datasets: [{ data: [countsSent.Positive, countsSent.Neutral, countsSent.Negative], backgroundColor: ['#22c55e','#eab308','#ef4444'], hoverOffset: 10 }]
+          },
+          options: { plugins: { legend: { labels: { color: '#cbd5e1' } } } }
+        });
+      }
+
+      // Populate table
+      const tbody = document.querySelector('#commentsTable tbody');
+      if(tbody){
+        tbody.innerHTML = '';
+        const rows = filtered.slice(0, 50);
+        rows.forEach(c => {
+          const tr = document.createElement('tr');
+          const role = c.name && /\b(Expert|General|Deeply affected)\b/i.test(c.name) ? RegExp.$1 : 'General';
+          const reason = c.text.length > 80 ? c.text.slice(0,80)+'…' : c.text;
+          tr.innerHTML = `<td>${c.name}</td><td>${role}</td><td class="${c.sentiment.toLowerCase()}">${c.sentiment}</td><td title="${c.text}">${c.text}</td><td title="${reason}">${reason}</td>`;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Filter binding
+      const filterInput = document.getElementById('filterInput');
+      if(filterInput){
+        filterInput.oninput = filterTable;
+      }
+    }
+
+    function clearFilter(){
+      const input = document.getElementById('filterInput');
+      if(input){ input.value=''; filterTable(); }
+    }
+
+    function filterTable(){
+      const input = document.getElementById('filterInput');
+      const filter = (input && input.value || '').toLowerCase();
+      const rows = document.querySelectorAll('#commentsTable tbody tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+      });
+    }
+
+    /*************
+     * Show different views (home, consult, dashboard)
+     *************/
+    function showView(view){
+      // hide all view areas
+      const homeEl = $('#home-view');
+      const consultEl = $('#consult-view');
+      const dashEl = $('#dashboard');
+      const ashaEl = $('#asha-view');
+      if(homeEl) homeEl.style.display = view === 'home' ? 'block' : 'none';
+      document.body.classList.toggle('view-home', view === 'home');
+      if(consultEl) consultEl.style.display = view === 'consult' ? 'block' : 'none';
+      if(dashEl) dashEl.style.display = (view === 'dashboard' && userRole === 'official') ? 'block' : 'none';
+      if(ashaEl) ashaEl.style.display = (view === 'asha' && userRole === 'asha') ? 'block' : 'none';
+
+      // update nav active
+      $all('.nav-link').forEach(a => {
+        a.classList.toggle('active', a.dataset.view === view);
+      });
+
+      document.body.classList.toggle('dashboard-view', view === 'dashboard' && userRole === 'official');
+      if(view === 'dashboard' && userRole === 'official'){
+        initDashboardFilter();
+        initDecisionSelect();
+        renderDashboard();
+        // Setup chips
+        const chips = document.querySelectorAll('.chip');
+        chips.forEach(ch => {
+          ch.addEventListener('click', () => {
+            chips.forEach(c => c.classList.remove('active'));
+            ch.classList.add('active');
+            const mode = ch.getAttribute('data-chip');
+            if(mode === 'all'){ renderDashboard(); return; }
+            const map = { positive:'Positive', neutral:'Neutral', negative:'Negative' };
+            const target = map[mode];
+            const recent = document.getElementById('recentComments');
+            if(recent){
+              recent.innerHTML = '';
+              const subset = (selectedAmendmentId==='all' ? commentsStore : commentsStore.filter(c=>c.amendId===selectedAmendmentId)).filter(c=>c.sentiment===target);
+              if(subset.length===0){ recent.innerHTML = '<div class="muted">No comments for selected sentiment.</div>'; }
+              else subset.slice(0,6).forEach(c=>{
+                const d = document.createElement('div');
+                d.style.padding='10px'; d.style.borderRadius='8px'; d.style.border='1px solid rgba(15,23,42,0.04)';
+                d.innerHTML = `<div style=\"display:flex;justify-content:space-between;align-items:center;\"><div style=\"font-weight:700\">${c.name}</div><div style=\"font-size:12px;color:#6b7280\">${c.date}</div></div><div style=\"margin-top:6px;color:#0f172a\">${c.text.slice(0,140)}${c.text.length>140?'...':''}</div><div style=\"margin-top:8px;font-size:13px;color:#475569\">Sentiment: <strong>${c.sentiment}</strong>${c.file? ' • File attached' : ''}</div>`;
+                recent.appendChild(d);
+              });
+            }
+          });
+        });
+      }
+    }
+
+    // initial
+    showView('home');
+    // Theme init
+    (function initTheme(){
+      const saved = localStorage.getItem('theme') || 'light';
+      if(saved === 'dark') document.documentElement.setAttribute('data-theme','dark');
+      const btn = document.getElementById('themeToggle');
+      if(btn) btn.textContent = (saved === 'dark') ? 'Light' : 'Dark';
+    })();
+
+    // nav links
+    $all('[data-view-link]').forEach(btn => btn.addEventListener('click', ()=> {
+      const dest = btn.dataset.viewLink;
+      if(dest === 'consult' && userRole !== 'citizen'){
+        toast('Please login as Citizen to access e‑Consultation.','info');
+        $('#loginModal').style.display = 'flex';
+        return;
+      }
+      if(dest === 'dashboard' && userRole !== 'official'){
+        toast('Officials only. Please login as Official.','info');
+        $('#loginModal').style.display = 'flex';
+        return;
+      }
+      if(dest === 'asha' && userRole !== 'asha'){
+        toast('ASHA app requires ASHA login.','info');
+        $('#loginModal').style.display = 'flex';
+        return;
+      }
+      showView(dest);
+    }));
+    $all('.nav-link').forEach(a => a.addEventListener('click', (e) => {
+      e.preventDefault();
+      showView(a.dataset.view);
+    }));
+
+    // Try Demo CTA — scroll to consultation and open first amendment
+    const ctaDemoBtn = $('#ctaDemo');
+    if(ctaDemoBtn) ctaDemoBtn.addEventListener('click', ()=>{
+      if(userRole === 'asha'){
+        showView('asha');
+      } else if(userRole === 'official'){
+        showView('dashboard');
+        renderDashboard();
+      } else if(userRole === 'citizen'){
+        showView('consult');
+        setTimeout(()=> openDrawer(demoAmendments[0]), 260);
+      } else {
+        toast('Please login to continue.','info');
+        $('#loginModal').style.display = 'flex';
+      }
+    });
+
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    if(themeToggle){
+      themeToggle.addEventListener('click', ()=>{
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const next = isDark ? 'light' : 'dark';
+        if(next === 'dark') document.documentElement.setAttribute('data-theme','dark');
+        else document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', next);
+        themeToggle.textContent = isDark ? 'Dark' : 'Light';
+      });
+    }
+
+    /*************
+     * Show comments modal (simple)
+     *************/
+    function showCommentsModal(id, comments){
+      const am = demoAmendments.find(a=>a.id === id);
+      const modal = document.createElement('div');
+      modal.style.position='fixed';
+      modal.style.left=0; modal.style.top=0; modal.style.right=0; modal.style.bottom=0;
+      modal.style.background='rgba(10,15,20,0.35)';
+      modal.style.zIndex=200;
+      modal.style.display='flex';
+      modal.style.alignItems='center';
+      modal.style.justifyContent='center';
+      const card = document.createElement('div');
+      card.className='card';
+      card.style.width='720px';
+      card.style.maxWidth='94%';
+      card.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
+                          <div>
+                            <h3 style="margin:0">${am.title}</h3>
+                            <div class="muted small">${am.date}</div>
+                          </div>
+                          <div><button class="btn ghost close">Close</button></div>
+                        </div>
+                        <hr style="margin:12px 0">
+                        <div id="modalComments" style="display:flex;flex-direction:column; gap:10px; max-height:380px; overflow:auto;"></div>`;
+      modal.appendChild(card);
+      document.body.appendChild(modal);
+
+      const container = card.querySelector('#modalComments');
+      if(comments.length === 0) {
+        container.innerHTML = '<div class="muted">No comments for this amendment yet.</div>';
+      } else {
+        comments.forEach(c => {
+          const d = document.createElement('div');
+          d.style.padding='10px';
+          d.style.borderRadius='8px';
+          d.style.border='1px solid rgba(15,23,42,0.04)';
+          d.innerHTML = `<div style=\"display:flex;justify-content:space-between;align-items:center;\">\n                          <div style=\"font-weight:700\">${c.name}</div>\n                          <div style=\"font-size:12px;color:#6b7280\">${c.date}</div>\n                        </div>\n                        <div style=\"margin-top:6px;color:#0f172a\">${c.text}</div>\n                        <div style=\"margin-top:8px;font-size:13px;color:#475569\">Sentiment: <strong>${c.sentiment}</strong>${c.file? ' • File: ' + c.file : ''}</div>`;
+          container.appendChild(d);
+        });
+      }
+
+      card.querySelector('.close').addEventListener('click', () => modal.remove());
+      modal.addEventListener('click', (ev)=>{ if(ev.target === modal) modal.remove(); });
+    }
+
+    /*************
+     * Login modal handlers (visual)
+     *************/
+    const demoLoginBtn = $('#demoLoginBtn');
+    const closeLoginBtn = $('#closeLogin');
+    const loginBtn = $('#loginBtn');
+    const logoutBtn = $('#logoutBtn');
+    const roleBadgeEl = $('#roleBadge');
+    if(demoLoginBtn) demoLoginBtn.addEventListener('click', ()=> $('#loginModal').style.display = 'flex');
+    if(closeLoginBtn) closeLoginBtn.addEventListener('click', ()=> $('#loginModal').style.display = 'none');
+    if(loginBtn) loginBtn.addEventListener('click', ()=> {
+      const roleSel = document.getElementById('loginRole');
+      const emailEl = document.getElementById('loginEmail');
+      const passEl = document.getElementById('loginPass');
+      const email = (emailEl && emailEl.value || '').trim();
+      const pass = (passEl && passEl.value || '').trim();
+      if(!email || !pass){ toast('Enter email and password.','warn'); return; }
+      // Basic email shape check
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ toast('Enter a valid email.','warn'); return; }
+      if(pass.length < 6){ toast('Password must be at least 6 characters.','warn'); return; }
+
+      userRole = (roleSel && roleSel.value) || 'citizen';
+      localStorage.setItem('userRole', userRole);
+      $('#loginModal').style.display = 'none';
+      updateUIForRole();
+      toast(`Logged in as ${userRole}.`,'success');
+      const heroBtnLogin = document.getElementById('heroOpenDashboard');
+      if(heroBtnLogin) heroBtnLogin.style.display = 'none';
+    });
+    if(logoutBtn) logoutBtn.addEventListener('click', ()=>{
+      userRole = 'guest';
+      localStorage.setItem('userRole', userRole);
+      updateUIForRole();
+      showView('home');
+      toast('Logged out.','info');
+      const heroBtnLogout = document.getElementById('heroOpenDashboard');
+      if(heroBtnLogout) heroBtnLogout.style.display = 'none';
+    });
+
+    function updateUIForRole(){
+      // role badge and auth buttons
+      if(userRole && userRole !== 'guest' && userRole !== 'citizen'){
+        roleBadgeEl.style.display = 'inline-block';
+        roleBadgeEl.textContent = `Role: ${userRole}`;
+        logoutBtn.style.display = 'inline-block';
+        demoLoginBtn.style.display = 'none';
+      } else if(userRole === 'citizen'){
+        roleBadgeEl.style.display = 'inline-block';
+        roleBadgeEl.textContent = `Role: citizen`;
+        logoutBtn.style.display = 'inline-block';
+        demoLoginBtn.style.display = 'none';
+      } else {
+        roleBadgeEl.style.display = 'none';
+        logoutBtn.style.display = 'none';
+        demoLoginBtn.style.display = 'inline-block';
+      }
+
+      // nav gating
+      $all('.nav-link').forEach(a => {
+        const allowed = a.dataset.role || 'all';
+        const visible = allowed === 'all' || (userRole !== 'guest' && allowed === userRole);
+        a.style.display = visible ? 'inline-block' : 'none';
+      });
+    }
+
+    updateUIForRole();
+
+    // small improvement: close drawer on ESC
+    document.addEventListener('keydown', e => {
+      if(e.key === 'Escape'){
+        closeDrawer();
+        $('#loginModal').style.display = 'none';
+      }
+    });
+
+    /*************
+     * Persistence helpers
+     *************/
+    function persistAll(){
+      localStorage.setItem('commentsStore', JSON.stringify(commentsStore));
+      localStorage.setItem('decisionsStore', JSON.stringify(decisionsStore));
+      localStorage.setItem('ashaQueue', JSON.stringify(ashaQueue));
+    }
+    function restoreAll(){
+      try {
+        const cs = JSON.parse(localStorage.getItem('commentsStore')||'[]');
+        if(Array.isArray(cs)) commentsStore = cs;
+      } catch {}
+      try {
+        const ds = JSON.parse(localStorage.getItem('decisionsStore')||'{}');
+        if(ds && typeof ds === 'object') decisionsStore = ds;
+      } catch {}
+      try {
+        const aq = JSON.parse(localStorage.getItem('ashaQueue')||'[]');
+        if(Array.isArray(aq)) ashaQueue = aq;
+      } catch {}
+      const statCommentsEl = $('#statComments');
+      if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
+    }
+    restoreAll();
+
+    /*************
+     * Decisions panel handlers (Officials)
+     *************/
+    const saveDecisionBtn = document.getElementById('saveDecisionBtn');
+    if(saveDecisionBtn){
+      saveDecisionBtn.addEventListener('click', ()=>{
+        const sel = document.getElementById('decisionAmendSelect');
+        const notesEl = document.getElementById('decisionNotes');
+        if(!sel || !notesEl) return;
+        const amendId = sel.value;
+        const notes = notesEl.value.trim();
+        decisionsStore[amendId] = { notes, updatedAt: new Date().toISOString() };
+        persistAll();
+        const msg = document.getElementById('decisionSavedMsg');
+        if(msg){ msg.style.display = 'inline'; setTimeout(()=> msg.style.display='none', 1200); }
+      });
+    }
+
+    /*************
+     * ASHA Field App: recording + queue
+     *************/
+    const ashaAmendSelect = document.getElementById('ashaAmendSelect');
+    if(ashaAmendSelect){
+      demoAmendments.forEach(a => ashaAmendSelect.add(new Option(`${a.id} — ${a.title}`, a.id)));
+    }
+    const ashaVillageEl = document.getElementById('ashaVillage');
+    const startRecBtn = document.getElementById('startRecBtn');
+    const stopRecBtn = document.getElementById('stopRecBtn');
+    const recStatus = document.getElementById('recStatus');
+    const queueList = document.getElementById('ashaQueueList');
+    const syncAllBtn = document.getElementById('syncAllBtn');
+    const clearQueueBtn = document.getElementById('clearQueueBtn');
+
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let recordStartMs = 0;
+    let chunks = [];
+    let sttRecognition = null;
+    let sttActive = false;
+    let sttPartial = '';
+    let cloudCfg = { endpoint: localStorage.getItem('transcribeEndpoint')||'', apiKey: localStorage.getItem('transcribeApiKey')||'' };
+    let translateCfg = { endpoint: localStorage.getItem('translateEndpoint')||'', apiKey: localStorage.getItem('translateApiKey')||'' };
+
+    function setRecUI(state){
+      if(recStatus){ recStatus.textContent = state; }
+      if(startRecBtn) startRecBtn.disabled = state !== 'Idle';
+      if(stopRecBtn) stopRecBtn.disabled = state !== 'Recording';
+    }
+
+    async function startRecording(){
+      try{
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        chunks = [];
+        mediaRecorder = new MediaRecorder(mediaStream, { mimeType: 'audio/webm' });
+        mediaRecorder.ondataavailable = ev => { if(ev.data && ev.data.size > 0) chunks.push(ev.data); };
+        mediaRecorder.onstop = async () => {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64 = reader.result; // data URL
+            const durationSec = Math.max(1, Math.round((Date.now() - recordStartMs)/1000));
+            const amendId = ashaAmendSelect ? ashaAmendSelect.value : 'A1';
+            const village = (ashaVillageEl && ashaVillageEl.value.trim()) || 'Unknown';
+            const item = {
+              id: 'AQ' + Math.floor(Math.random()*90000+10000),
+              amendId, village,
+              createdAt: new Date().toISOString(),
+              durationSec,
+              audioBase64: base64,
+              transcribedText: sttPartial || ''
+            };
+            ashaQueue.unshift(item);
+            persistAll();
+            renderAshaQueue();
+            // If cloud STT is enabled, send for transcription; optionally translate to English
+            const useCloud = document.getElementById('useCloudSTT');
+            if(useCloud && useCloud.checked){
+              transcribeWithCloud(item).catch(()=>{});
+            }
+          };
+          reader.readAsDataURL(blob);
+          if(mediaStream){ mediaStream.getTracks().forEach(t => t.stop()); }
+          setRecUI('Idle');
+          stopSTT();
+        };
+        mediaRecorder.start();
+        recordStartMs = Date.now();
+        setRecUI('Recording');
+        // Maybe start STT
+        const autoEl = document.getElementById('autoTranscribe');
+        if(autoEl && autoEl.checked){ startSTT(); }
+      } catch(err){
+        toast('Microphone permission denied or unavailable.','error');
+        setRecUI('Idle');
+      }
+    }
+
+    function stopRecording(){
+      try{ if(mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop(); } catch {}
+    }
+
+    function startSTT(){
+      try{
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if(!SpeechRecognition){
+          toast('On‑device speech recognition not supported in this browser.','info');
+          return;
+        }
+        sttRecognition = new SpeechRecognition();
+        const langSel = document.getElementById('sttLang');
+        sttRecognition.lang = (langSel && langSel.value) || 'en-IN';
+        sttRecognition.continuous = true;
+        sttRecognition.interimResults = true;
+        sttPartial = '';
+        sttActive = true;
+        const sttStatus = document.getElementById('sttStatus');
+        if(sttStatus) sttStatus.textContent = 'STT: Listening…';
+        sttRecognition.onresult = (event) => {
+          let interim = '';
+          let final = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) final += transcript + ' ';
+            else interim += transcript + ' ';
+          }
+          // For English, directly build partial. For non-English, we still preview raw text; cloud translate will convert to English later.
+          sttPartial = (sttPartial + ' ' + final + ' ' + interim).trim().slice(0, 2000);
+          // Show last typed text in the last queue draft if any
+          const lastTx = document.querySelector('#ashaQueueList .asha-tx');
+          if(lastTx && lastTx.value.trim().length === 0){ lastTx.value = sttPartial; }
+          const sttPrev = document.getElementById('sttPreview');
+          if(sttPrev){ sttPrev.value = sttPartial; }
+        };
+        sttRecognition.onerror = () => { if(sttStatus) sttStatus.textContent = 'STT: Error'; };
+        sttRecognition.onend = () => { if(sttStatus) sttStatus.textContent = 'STT: Off'; sttActive = false; };
+        sttRecognition.start();
+      } catch(err){
+        toast('Failed to start speech recognition.','error');
+      }
+    }
+
+    function stopSTT(){
+      try{ if(sttRecognition && sttActive) sttRecognition.stop(); } catch {}
+      sttActive = false;
+      const sttStatus = document.getElementById('sttStatus');
+      if(sttStatus) sttStatus.textContent = 'STT: Off';
+    }
+
+    if(startRecBtn) startRecBtn.addEventListener('click', startRecording);
+    if(stopRecBtn) stopRecBtn.addEventListener('click', stopRecording);
+
+    // Cloud STT and Translate config handlers
+    const useCloudSTTEl = document.getElementById('useCloudSTT');
+    const cloudCfgEl = document.getElementById('cloudCfg');
+    const saveCfgBtn = document.getElementById('saveTranscribeCfgBtn');
+    const endpointEl = document.getElementById('transcribeEndpoint');
+    const apiKeyEl = document.getElementById('transcribeApiKey');
+    const cloudSttStatus = document.getElementById('cloudSttStatus');
+    const useTranslateEl = document.getElementById('useTranslate');
+    const translateCfgEl = document.getElementById('translateCfg');
+    const translateEndpointEl = document.getElementById('translateEndpoint');
+    const translateApiKeyEl = document.getElementById('translateApiKey');
+    const saveTranslateCfgBtn = document.getElementById('saveTranslateCfgBtn');
+    const translateStatusEl = document.getElementById('translateStatus');
+    if(endpointEl) endpointEl.value = cloudCfg.endpoint;
+    if(apiKeyEl) apiKeyEl.value = cloudCfg.apiKey;
+    if(translateEndpointEl) translateEndpointEl.value = translateCfg.endpoint;
+    if(translateApiKeyEl) translateApiKeyEl.value = translateCfg.apiKey;
+    if(useCloudSTTEl){
+      useCloudSTTEl.addEventListener('change', ()=>{
+        const on = !!useCloudSTTEl.checked;
+        cloudCfgEl.style.display = on ? 'block' : 'none';
+        if(cloudSttStatus) cloudSttStatus.textContent = on ? 'Cloud: Ready' : 'Cloud: Off';
+      });
+    }
+    if(saveCfgBtn){
+      saveCfgBtn.addEventListener('click', ()=>{
+        cloudCfg.endpoint = (endpointEl && endpointEl.value || '').trim();
+        cloudCfg.apiKey = (apiKeyEl && apiKeyEl.value || '').trim();
+        localStorage.setItem('transcribeEndpoint', cloudCfg.endpoint);
+        localStorage.setItem('transcribeApiKey', cloudCfg.apiKey);
+        toast('Transcription API settings saved.','success');
+      });
+    }
+    if(useTranslateEl){
+      useTranslateEl.addEventListener('change', ()=>{
+        const on = !!useTranslateEl.checked;
+        translateCfgEl.style.display = on ? 'block' : 'none';
+        if(translateStatusEl) translateStatusEl.textContent = on ? 'Translate: Ready' : 'Translate: Off';
+      });
+    }
+    if(saveTranslateCfgBtn){
+      saveTranslateCfgBtn.addEventListener('click', ()=>{
+        translateCfg.endpoint = (translateEndpointEl && translateEndpointEl.value || '').trim();
+        translateCfg.apiKey = (translateApiKeyEl && translateApiKeyEl.value || '').trim();
+        localStorage.setItem('translateEndpoint', translateCfg.endpoint);
+        localStorage.setItem('translateApiKey', translateCfg.apiKey);
+        toast('Translate API settings saved.','success');
+      });
+    }
+
+    async function transcribeWithCloud(queueItem){
+      try{
+        if(!cloudCfg.endpoint){ toast('Set Transcribe API endpoint first.','warn'); return; }
+        const cloudSttStatus = document.getElementById('cloudSttStatus');
+        if(cloudSttStatus) cloudSttStatus.textContent = 'Cloud: Uploading…';
+        // Send base64 payload to Whisper API (server) — recommended to use multipart/form-data
+        // If your server expects multipart form for Whisper:
+        const form = new FormData();
+        // Convert data URL to Blob
+        const dataUrl = queueItem.audioBase64;
+        const arr = dataUrl.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length; const u8arr = new Uint8Array(n);
+        while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+        const audioBlob = new Blob([u8arr], { type: mime });
+        form.append('file', audioBlob, 'audio.webm');
+        form.append('response_language', 'en');
+        const res = await fetch(cloudCfg.endpoint, {
+          method: 'POST',
+          headers: {
+            ...(cloudCfg.apiKey ? { 'Authorization': `Bearer ${cloudCfg.apiKey}` } : {})
+          },
+          body: form
+        });
+        if(!res.ok){ throw new Error('Bad response'); }
+        const data = await res.json();
+        let text = data.text_en || data.text || '';
+        if(!text){ throw new Error('No text in response'); }
+
+        // If translate is enabled and response isn't English, translate to English
+        if(useTranslateEl && useTranslateEl.checked){
+          try{
+            if(!translateCfg.endpoint){ throw new Error('missing translate endpoint'); }
+            if(translateStatusEl) translateStatusEl.textContent = 'Translate: Processing…';
+            const tRes = await fetch(translateCfg.endpoint, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(translateCfg.apiKey ? { 'Authorization': `Bearer ${translateCfg.apiKey}` } : {})
+              },
+              body: JSON.stringify({ text, target_lang: 'en' })
+            });
+            const tJson = await tRes.json();
+            if(tRes.ok && (tJson.text || tJson.text_en)){
+              text = tJson.text || tJson.text_en;
+            }
+          } catch {}
+        }
+
+        // Update item transcription
+        const idx = ashaQueue.findIndex(q => q.id === queueItem.id);
+        if(idx !== -1){
+          ashaQueue[idx].transcribedText = text;
+          persistAll();
+          renderAshaQueue();
+          toast('Cloud transcription completed.','success');
+        }
+      } catch(err){
+        toast('Cloud transcription failed.','error');
+      } finally {
+        const cloudSttStatus2 = document.getElementById('cloudSttStatus');
+        if(cloudSttStatus2) cloudSttStatus2.textContent = 'Cloud: Ready';
+        if(translateStatusEl) translateStatusEl.textContent = useTranslateEl && useTranslateEl.checked ? 'Translate: Ready' : 'Translate: Off';
+      }
+    }
+
+    function renderAshaQueue(){
+      if(!queueList) return;
+      queueList.innerHTML = '';
+      if(ashaQueue.length === 0){
+        queueList.innerHTML = '<div class="muted">No queued items.</div>';
+        return;
+      }
+      ashaQueue.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'queue-item';
+        const amend = demoAmendments.find(a => a.id === item.amendId);
+        card.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700">${amend ? amend.title : item.amendId}</div>
+            <div class="small muted">${new Date(item.createdAt).toLocaleString()}</div>
+          </div>
+          <div class="small muted" style="margin-top:4px;">Village: <strong>${item.village}</strong> • Duration: <strong>${item.durationSec}s</strong></div>
+          <audio controls src="${item.audioBase64}" style="width:100%; margin-top:6px;"></audio>
+          <label class="small muted" style="margin-top:8px; display:block;">Transcription</label>
+          <textarea class="input asha-tx" data-id="${item.id}" rows="3" placeholder="Type the summary/transcription here..."></textarea>
+          <div style="display:flex; gap:8px; margin-top:8px;">
+            <button class="btn asha-save" data-id="${item.id}">Save</button>
+            <button class="btn ghost asha-upload" data-id="${item.id}">Upload to Analysis</button>
+            <button class="btn ghost asha-delete" data-id="${item.id}">Delete</button>
+          </div>
+        `;
+        queueList.appendChild(card);
+        // preset existing text
+        const tx = card.querySelector('.asha-tx');
+        if(tx){ tx.value = item.transcribedText || ''; }
+      });
+    }
+    renderAshaQueue();
+
+    function uploadQueueItem(id){
+      const idx = ashaQueue.findIndex(q => q.id === id);
+      if(idx === -1) return;
+      const item = ashaQueue[idx];
+      const text = (item.transcribedText || '').trim();
+      if(!text){ toast('Please add transcription before upload.','warn'); return; }
+      // simulate analyze -> push to commentsStore
+      const sentiment = analyzeSentiment(text);
+      commentsStore.unshift({
+        id: 'C' + Math.floor(Math.random()*90000+10000),
+        name: 'ASHA (Field)',
+        text,
+        file: null,
+        sentiment,
+        amendId: item.amendId,
+        amendTitle: (demoAmendments.find(a => a.id===item.amendId)||{}).title || item.amendId,
+        date: new Date().toISOString().slice(0,10)
+      });
+      ashaQueue.splice(idx,1);
+      persistAll();
+      renderAshaQueue();
+          const statCommentsEl = $('#statComments');
+          if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
+          toast('Uploaded to analysis. Officials can view it in the dashboard.','success');
+    }
+
+    if(queueList){
+      queueList.addEventListener('click', (e)=>{
+        const saveBtn = e.target.closest && e.target.closest('.asha-save');
+        const uploadBtn = e.target.closest && e.target.closest('.asha-upload');
+        const delBtn = e.target.closest && e.target.closest('.asha-delete');
+        if(saveBtn){
+          const id = saveBtn.dataset.id;
+          const idx = ashaQueue.findIndex(q => q.id === id);
+          if(idx !== -1){
+            const tx = queueList.querySelector(`.asha-tx[data-id="${id}"]`);
+            ashaQueue[idx].transcribedText = (tx && tx.value) || '';
+            persistAll();
+            toast('Saved transcription.','success');
+          }
+        }
+        if(uploadBtn){ uploadQueueItem(uploadBtn.dataset.id); }
+        if(delBtn){
+          const id = delBtn.dataset.id;
+          ashaQueue = ashaQueue.filter(q => q.id !== id);
+          persistAll();
+          renderAshaQueue();
+          toast('Deleted from queue.','info');
+        }
+      });
+    }
+
+    if(syncAllBtn){
+      syncAllBtn.addEventListener('click', ()=>{
+        // upload only items with transcription
+        const ready = ashaQueue.filter(q => (q.transcribedText||'').trim().length>0).map(q=>q.id);
+        ready.forEach(uploadQueueItem);
+        if(ready.length === 0) toast('No items with transcription to sync.','info');
+      });
+    }
+    if(clearQueueBtn){
+      clearQueueBtn.addEventListener('click', ()=>{
+        if(confirm('Clear all queued items?')){
+          ashaQueue = [];
+          persistAll();
+          renderAshaQueue();
+          toast('Queue cleared.','info');
+        }
+      });
+    }
+
+    // Keep stats consistent on load
+    const statCommentsEl2 = $('#statComments');
+    if (statCommentsEl2) statCommentsEl2.textContent = commentsStore.length;
+
+    /*************
+     * Toasts, Seeding, and Enhancements
+     *************/
+    function toast(message, type='info', timeout=2400){
+      const c = document.getElementById('toastContainer');
+      if(!c) return;
+      const d = document.createElement('div');
+      d.className = `toast ${type}`;
+      d.textContent = message;
+      c.appendChild(d);
+      setTimeout(()=>{ d.style.opacity = '0'; d.style.transition='opacity .3s'; }, timeout-300);
+      setTimeout(()=> d.remove(), timeout);
+    }
+
+    function seedDemoData(){
+      const samples = [
+        {name:'R. Patel', amendId:'A2', text:'This amendment is helpful and improves governance. Please clarify board independence criteria.', date:'2025-09-25'},
+        {name:'S. Kumar', amendId:'A1', text:'I fully support the change, it improves transparency and reduces ambiguity for small businesses.', date:'2025-09-12'},
+        {name:'M. Singh', amendId:'A3', text:'Concern about increased compliance burden for MSMEs. Definitions are confusing.', date:'2025-08-31'},
+        {name:'N. Gupta', amendId:'A4', text:'Positive step to adjust small company thresholds. Beneficial and fair.', date:'2025-09-16'},
+        {name:'A. Das', amendId:'A2', text:'Against the whistleblower process as drafted; seems difficult to implement.', date:'2025-09-26'},
+        {name:'P. Verma', amendId:'A3', text:'Neutral view; supportive if digital attestation remains optional.', date:'2025-09-01'}
+      ];
+      commentsStore = samples.map(s => ({
+        id: 'C' + Math.floor(Math.random()*90000+10000),
+        name: s.name,
+        text: s.text,
+        file: null,
+        sentiment: analyzeSentiment(s.text),
+        amendId: s.amendId,
+        amendTitle: (demoAmendments.find(a=>a.id===s.amendId)||{}).title || s.amendId,
+        date: s.date
+      })).concat(commentsStore || []);
+      decisionsStore = {
+        A1: { notes: 'Generally positive; proceed with minor clarifications.', updatedAt: new Date().toISOString() },
+        A2: { notes: 'Mixed sentiment. Revisit independence definitions; consult industry.', updatedAt: new Date().toISOString() }
+      };
+      localStorage.setItem('seeded','1');
+      persistAll();
+      const statCommentsEl = $('#statComments');
+      if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
+      toast('Demo data seeded.','success');
+    }
+
+    function resetDemo(){
+      localStorage.removeItem('commentsStore');
+      localStorage.removeItem('decisionsStore');
+      localStorage.removeItem('ashaQueue');
+      localStorage.removeItem('seeded');
+      commentsStore = [];
+      decisionsStore = {};
+      ashaQueue = [];
+      seedDemoData();
+      renderDashboard();
+      renderAshaQueue();
+      toast('Demo reset and reseeded.','success');
+    }
+
+    // Auto-seed once
+    if(!localStorage.getItem('seeded')){ seedDemoData(); }
+
+    // Attach seed/reset buttons
+    const seedBtn = document.getElementById('seedDemoBtn');
+    const resetBtn = document.getElementById('resetDemoBtn');
+    if(seedBtn) seedBtn.addEventListener('click', seedDemoData);
+    if(resetBtn) resetBtn.addEventListener('click', resetDemo);
+
+    // Comment char counter
+    const commentTextEl = document.getElementById('commentText');
+    const commentCharCount = document.getElementById('commentCharCount');
+    if(commentTextEl && commentCharCount){
+      commentTextEl.setAttribute('maxlength','500');
+      commentTextEl.addEventListener('input', ()=>{
+        const len = (commentTextEl.value||'').length;
+        commentCharCount.textContent = String(len);
+      });
+    }
+
+    // Amendment details modal
+    function showAmendmentDetails(am){
+      const modal = document.createElement('div');
+      modal.style.position='fixed';
+      modal.style.left=0; modal.style.top=0; modal.style.right=0; modal.style.bottom=0;
+      modal.style.background='rgba(10,15,20,0.35)';
+      modal.style.zIndex=220; modal.style.display='flex'; modal.style.alignItems='center'; modal.style.justifyContent='center';
+      const card = document.createElement('div');
+      card.className='card'; card.style.width='720px'; card.style.maxWidth='94%'; card.style.padding='18px';
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h3 style="margin:0">${am.title}</h3>
+            <div class="muted small">${am.date}</div>
+          </div>
+          <div><button class="btn ghost close">Close</button></div>
+        </div>
+        <hr style="margin:12px 0">
+        <div class="small" style="color:#0f172a;">${am.desc || 'No description available.'}</div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn open-comment-now">Comment on this</button>
+          <button class="btn ghost view-comments-now">View comments</button>
+        </div>
+      `;
+      modal.appendChild(card);
+      document.body.appendChild(modal);
+      card.querySelector('.close').addEventListener('click', ()=> modal.remove());
+      modal.addEventListener('click', (ev)=>{ if(ev.target===modal) modal.remove(); });
+      card.querySelector('.open-comment-now').addEventListener('click', ()=>{ modal.remove(); openDrawer(am); });
+      card.querySelector('.view-comments-now').addEventListener('click', ()=>{ modal.remove(); const list = commentsStore.filter(c=>c.amendId===am.id); showCommentsModal(am.id, list); });
+    }
+
+    // Decisions list rendering
+    function renderDecisionsList(){
+      const card = document.getElementById('decisionsListCard');
+      const listEl = document.getElementById('decisionsList');
+      if(!card || !listEl) return;
+      if(userRole !== 'official'){ card.style.display='none'; return; }
+      const entries = Object.entries(decisionsStore||{});
+      if(entries.length === 0){
+        listEl.textContent = 'No notes yet.';
+      } else {
+        listEl.innerHTML = '';
+        entries.forEach(([id, obj])=>{
+          const am = demoAmendments.find(a=>a.id===id);
+          const div = document.createElement('div');
+          div.style.border='1px solid rgba(15,23,42,0.06)';
+          div.style.borderRadius='8px';
+          div.style.padding='8px';
+          div.style.marginTop='8px';
+          div.innerHTML = `<div style="font-weight:700;">${am ? am.title : id}</div><div class=\"small muted\">${new Date(obj.updatedAt||Date.now()).toLocaleString()}</div><div style=\"margin-top:6px;\">${(obj.notes||'').replace(/</g,'&lt;')}</div>`;
+          listEl.appendChild(div);
+        });
+      }
+      card.style.display = 'block';
+    }
+
+    // Hook decision select to load saved text
+    const decisionSelect = document.getElementById('decisionAmendSelect');
+    const decisionNotesEl = document.getElementById('decisionNotes');
+    if(decisionSelect && decisionNotesEl){
+      decisionSelect.addEventListener('change', ()=>{
+        const id = decisionSelect.value;
+        decisionNotesEl.value = (decisionsStore[id]?.notes) || '';
+      });
+    }
+
+    // Keep decisions list in sync when dashboard renders or notes save
+    const origRenderDashboard = renderDashboard;
+    renderDashboard = function(){
+      origRenderDashboard();
+      renderDecisionsList();
+      if(decisionSelect && decisionSelect.value){ decisionNotesEl.value = (decisionsStore[decisionSelect.value]?.notes)||''; }
+    };
+  </script>
+</body>
+</html>
