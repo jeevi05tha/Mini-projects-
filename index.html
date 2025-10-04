@@ -393,6 +393,12 @@
     .stat-grid .label{ color:var(--muted); }
     .stat-grid .value{ font-weight:700; }
 
+    /* Home info tiles visibility */
+    .info-tiles{ display:none; }
+    .view-home .info-tiles{ display:grid; }
+    .view-home .grid{ grid-template-columns: 1fr; }
+    .view-home .side{ display:none; }
+
     /* responsive */
     @media (max-width:980px){
       .grid{grid-template-columns:1fr}
@@ -458,7 +464,7 @@
         </div>
       </div>
 
-      <div class="tiles" style="margin-top:12px;">
+      <div class="tiles info-tiles" style="margin-top:12px;">
         <div class="tile">
           <div class="heading">How it works</div>
           <ul class="small muted" style="padding-left:18px; margin:8px 0; line-height:1.8;">
@@ -469,12 +475,22 @@
           </ul>
         </div>
         <div class="tile">
-          <div class="heading">Privacy & security</div>
-          <div class="desc">Front‑end MVP. Connect to a secure backend for storage, auth, and ML.</div>
+          <div class="heading">About Manobhava</div>
+          <div class="desc">A solution to collect and analyze regulator feedback quickly. The dashboard is interactive and can be connected to a secure back‑end.</div>
+          <div class="small muted" style="font-weight:700; margin-top:8px;">What you can demo</div>
+          <ul class="checklist">
+            <li><span class="small muted">Submit comment & file for an amendment</span></li>
+            <li><span class="small muted">Instant analysis → word cloud + sentiment chart</span></li>
+            <li><span class="small muted">View recent comments and quick summary</span></li>
+          </ul>
         </div>
         <div class="tile">
-          <div class="heading">Theme</div>
-          <div class="desc">Use the button on the top right to toggle light/dark modes.</div>
+          <div class="heading">Quick stats</div>
+          <div class="stat-grid" style="margin-top:10px;">
+            <div class="label small">Amendments listed</div><div class="value" id="statCount">0</div>
+            <div class="label small">Comments submitted</div><div class="value" id="statComments">0</div>
+            <div class="label small">Mode</div><div class="value">Front‑end MVP</div>
+          </div>
         </div>
       </div>
     </section>
@@ -1088,6 +1104,7 @@
       const dashEl = $('#dashboard');
       const ashaEl = $('#asha-view');
       if(homeEl) homeEl.style.display = view === 'home' ? 'block' : 'none';
+      document.body.classList.toggle('view-home', view === 'home');
       if(consultEl) consultEl.style.display = view === 'consult' ? 'block' : 'none';
       if(dashEl) dashEl.style.display = (view === 'dashboard' && userRole === 'official') ? 'block' : 'none';
       if(ashaEl) ashaEl.style.display = (view === 'asha' && userRole === 'asha') ? 'block' : 'none';
