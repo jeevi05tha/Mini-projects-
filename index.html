@@ -624,8 +624,10 @@
                 <thead>
                   <tr>
                     <th>Name</th>
+                    <th>Role</th>
                     <th>Sentiment</th>
-                    <th>Comment</th>
+                    <th>Original Comment</th>
+                    <th>Reason / Short Comment</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -1241,14 +1243,16 @@
         decisionsCard.style.display = (userRole === 'official') ? 'block' : 'none';
       }
 
-      // Populate modern table
+      // Populate modern table (Name, Role, Sentiment, Original Comment, Reason)
       const tableBody = document.querySelector('#mdCommentsTable tbody');
       if(tableBody){
         tableBody.innerHTML = '';
         const rows = filtered.slice(0, 15);
         rows.forEach(c => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${c.name}</td><td class="${c.sentiment.toLowerCase()}">${c.sentiment}</td><td title="${c.text}">${c.text}</td>`;
+          const role = c.name && /\b(Expert|General|Deeply affected)\b/i.test(c.name) ? RegExp.$1 : 'General';
+          const reason = c.text.length > 80 ? c.text.slice(0, 80) + '…' : c.text;
+          tr.innerHTML = `<td>${c.name}</td><td>${role}</td><td class="${c.sentiment.toLowerCase()}">${c.sentiment}</td><td title="${c.text}">${c.text}</td><td title="${reason}">${reason}</td>`;
           tableBody.appendChild(tr);
         });
         // counters
