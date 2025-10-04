@@ -25,18 +25,33 @@
       --accent: #2b7fb6;
       --accent-2: #2bb38f;
       --muted: #6b7280;
+      --text: #0f172a;
       --glass: rgba(255,255,255,0.8);
       --pill: #cfeaf2;
       --soft: #eef8f6;
       --shadow: 0 6px 18px rgba(23,35,60,0.08);
       --radius: 12px;
+      --bg-gradient: linear-gradient(180deg, var(--bg), #eef6fb 200px);
       font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    [data-theme="dark"]{
+      --bg: #0b1020;
+      --card: #0f172a;
+      --accent: #2b7fb6;
+      --accent-2: #17b897;
+      --muted: #94a3b8;
+      --text: #e5e7eb;
+      --glass: rgba(17,24,39,0.7);
+      --pill: rgba(59,130,246,0.18);
+      --soft: #0b1720;
+      --shadow: 0 6px 18px rgba(0,0,0,0.45);
+      --bg-gradient: linear-gradient(180deg, #0b1020, #111827 240px);
     }
     *{box-sizing:border-box}
     body{
       margin:0;
-      background: linear-gradient(180deg, var(--bg), #eef6fb 200px);
-      color:#0f172a;
+      background: var(--bg-gradient);
+      color: var(--text);
       -webkit-font-smoothing:antialiased;
       -moz-osx-font-smoothing:grayscale;
       min-height:100vh;
@@ -140,6 +155,9 @@
       padding:20px;
       box-shadow:var(--shadow);
     }
+    [data-theme="dark"] .card{
+      border: 1px solid rgba(148,163,184,0.08);
+    }
     h1.title{
       margin:0 0 8px;
       font-size:22px;
@@ -161,8 +179,8 @@
       align-items:center;
       padding:14px;
       border-radius:10px;
-      border:1px solid rgba(15,23,42,0.04);
-      background:linear-gradient(180deg, #fff, #fbfcff);
+      border:1px solid rgba(15,23,42,0.08);
+      background:linear-gradient(180deg, var(--card), rgba(255,255,255,0.02));
     }
     .amendment .meta{
       display:flex;
@@ -302,8 +320,8 @@
       gap:10px;
       padding:16px;
       border-radius:10px;
-      background:linear-gradient(180deg, #fff, #fbfdff);
-      border:1px solid rgba(15,23,42,0.04);
+      background:linear-gradient(180deg, var(--card), rgba(255,255,255,0.02));
+      border:1px solid rgba(15,23,42,0.08);
     }
 
     /* footer */
@@ -384,6 +402,7 @@
 
     <div class="right-actions">
       <span id="roleBadge" class="role-badge" style="display:none;"></span>
+      <button class="btn ghost" id="themeToggle" title="Toggle theme">Dark</button>
       <button class="btn ghost" id="demoLoginBtn">Login</button>
       <button class="btn ghost" id="logoutBtn" style="display:none;">Logout</button>
       <button class="btn" id="ctaDemo">Get Started</button>
@@ -1039,6 +1058,13 @@
 
     // initial
     showView('home');
+    // Theme init
+    (function initTheme(){
+      const saved = localStorage.getItem('theme') || 'light';
+      if(saved === 'dark') document.documentElement.setAttribute('data-theme','dark');
+      const btn = document.getElementById('themeToggle');
+      if(btn) btn.textContent = (saved === 'dark') ? 'Light' : 'Dark';
+    })();
 
     // nav links
     $all('[data-view-link]').forEach(btn => btn.addEventListener('click', ()=> {
@@ -1081,6 +1107,19 @@
         $('#loginModal').style.display = 'flex';
       }
     });
+
+    // Theme toggle
+    const themeToggle = document.getElementById('themeToggle');
+    if(themeToggle){
+      themeToggle.addEventListener('click', ()=>{
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        const next = isDark ? 'light' : 'dark';
+        if(next === 'dark') document.documentElement.setAttribute('data-theme','dark');
+        else document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', next);
+        themeToggle.textContent = isDark ? 'Dark' : 'Light';
+      });
+    }
 
     /*************
      * Show comments modal (simple)
