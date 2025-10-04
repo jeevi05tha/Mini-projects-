@@ -345,6 +345,22 @@
     .cloud .token:hover{ transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.06); }
     .cloud .token.active{ outline:2px solid var(--accent); outline-offset:2px; }
 
+    /* KPI row */
+    .kpis{ display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap:12px; }
+    .kpi{ background:linear-gradient(180deg, var(--card), rgba(255,255,255,0.02)); border:1px solid rgba(15,23,42,0.08); border-radius:10px; padding:12px; }
+    .kpi .label{ color:var(--muted); font-size:12px; }
+    .kpi .value{ font-weight:800; font-size:24px; margin-top:4px; }
+
+    /* Chips */
+    .chips{ display:flex; gap:8px; flex-wrap:wrap; }
+    .chip{ border:1px solid rgba(15,23,42,0.1); background:var(--card); color:var(--text); padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; }
+    .chip.active{ border-color: var(--accent); color: var(--accent); background: var(--pill); }
+
+    /* Tabs */
+    .tabs{ display:flex; gap:6px; }
+    .tab{ border:1px solid rgba(15,23,42,0.1); background:var(--card); color:var(--text); padding:6px 10px; border-radius:8px; font-size:12px; cursor:pointer; }
+    .tab.active{ border-color: var(--accent); color: var(--accent); background: var(--pill); }
+
     /* footer */
     footer{
       margin:36px auto;
@@ -532,7 +548,7 @@
           <div style="display:flex; gap:12px; align-items:center; justify-content:space-between;">
             <div>
               <h2 style="margin:0;">Official Dashboard</h2>
-              <div class="small muted">Visualization of citizen comments: keywords and sentiment distribution.</div>
+              <div class="small muted">Overview of submissions and analysis by amendment.</div>
             </div>
             <div id="filterInfo" class="small muted" style="display:flex; gap:8px; align-items:center;">
               <label for="amendmentFilter" class="small" style="font-weight:600;">Filter:</label>
@@ -541,6 +557,20 @@
           </div>
 
           <div class="small" id="filterBadge" style="margin-top:10px; background:var(--pill); color:var(--accent); display:inline-block; padding:4px 10px; border-radius:999px;"></div>
+
+          <div class="kpis" style="margin-top:12px;">
+            <div class="kpi"><div class="label">Total Comments</div><div class="value" id="kpiTotal">0</div></div>
+            <div class="kpi"><div class="label">Positive %</div><div class="value" id="kpiPos">0%</div></div>
+            <div class="kpi"><div class="label">Neutral %</div><div class="value" id="kpiNeu">0%</div></div>
+            <div class="kpi"><div class="label">Negative %</div><div class="value" id="kpiNeg">0%</div></div>
+          </div>
+
+          <div class="chips" style="margin-top:10px;">
+            <div class="chip" data-chip="all">All</div>
+            <div class="chip" data-chip="positive">Positive</div>
+            <div class="chip" data-chip="neutral">Neutral</div>
+            <div class="chip" data-chip="negative">Negative</div>
+          </div>
 
           <div class="dash-grid" style="margin-top:12px;">
             <div>
@@ -1083,6 +1113,16 @@
       const neuPct = Math.round((countsSent.Neutral/total)*100);
       const negPct = Math.round((countsSent.Negative/total)*100);
 
+      // Update KPIs
+      const kpiTotal = document.getElementById('kpiTotal');
+      const kpiPos = document.getElementById('kpiPos');
+      const kpiNeu = document.getElementById('kpiNeu');
+      const kpiNeg = document.getElementById('kpiNeg');
+      if(kpiTotal) kpiTotal.textContent = String(filtered.length);
+      if(kpiPos) kpiPos.textContent = `${posPct}%`;
+      if(kpiNeu) kpiNeu.textContent = `${neuPct}%`;
+      if(kpiNeg) kpiNeg.textContent = `${negPct}%`;
+
       const ctxEl = document.getElementById('sentChart');
       if(ctxEl){
         const ctx = ctxEl.getContext('2d');
@@ -1153,6 +1193,30 @@
         initDashboardFilter();
         initDecisionSelect();
         renderDashboard();
+        // Setup chips
+        const chips = document.querySelectorAll('.chip');
+        chips.forEach(ch => {
+          ch.addEventListener('click', () => {
+            chips.forEach(c => c.classList.remove('active'));
+            ch.classList.add('active');
+            const mode = ch.getAttribute('data-chip');
+            if(mode === 'all'){ renderDashboard(); return; }
+            const map = { positive:'Positive', neutral:'Neutral', negative:'Negative' };
+            const target = map[mode];
+            const recent = document.getElementById('recentComments');
+            if(recent){
+              recent.innerHTML = '';
+              const subset = (selectedAmendmentId==='all' ? commentsStore : commentsStore.filter(c=>c.amendId===selectedAmendmentId)).filter(c=>c.sentiment===target);
+              if(subset.length===0){ recent.innerHTML = '<div class="muted">No comments for selected sentiment.</div>'; }
+              else subset.slice(0,6).forEach(c=>{
+                const d = document.createElement('div');
+                d.style.padding='10px'; d.style.borderRadius='8px'; d.style.border='1px solid rgba(15,23,42,0.04)';
+                d.innerHTML = `<div style=\"display:flex;justify-content:space-between;align-items:center;\"><div style=\"font-weight:700\">${c.name}</div><div style=\"font-size:12px;color:#6b7280\">${c.date}</div></div><div style=\"margin-top:6px;color:#0f172a\">${c.text.slice(0,140)}${c.text.length>140?'...':''}</div><div style=\"margin-top:8px;font-size:13px;color:#475569\">Sentiment: <strong>${c.sentiment}</strong>${c.file? ' • File attached' : ''}</div>`;
+                recent.appendChild(d);
+              });
+            }
+          });
+        });
       }
     }
 
