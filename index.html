@@ -317,6 +317,8 @@
       align-items:start;
       grid-template-columns: 1fr 420px;
     }
+    .dash-grid > div{ display: contents; }
+    .dash-grid .wide{ grid-column: 1 / -1; }
     @media (max-width: 980px){
       .dash-grid{ grid-template-columns: 1fr; }
     }
@@ -590,7 +592,7 @@
             <div class="chip" data-chip="negative">Negative</div>
           </div>
 
-          <div class="modern-dashboard" style="margin-top:12px;">
+          <div class="modern-dashboard wide" style="margin-top:12px;">
             <div class="top-row">
               <div class="md-card">
                 <h3>Sentiment Counts</h3>
