@@ -480,7 +480,6 @@
       <a href="#" class="nav-link active" data-view="home" data-role="all">Home</a>
       <a href="#" class="nav-link" data-view="consult" data-role="citizen">e-Consultation</a>
       <a href="#" class="nav-link" data-view="asha" data-role="asha" style="display:none;">ASHA Field App</a>
-      <a href="#" class="nav-link" data-view="dashboard" data-role="official" style="display:none;">Official Dashboard</a>
     </nav>
 
     <div class="right-actions">
@@ -517,7 +516,8 @@
           <div class="heading">Official</div>
           <div class="desc">View analytics, summaries, and capture decision notes.</div>
           <div class="actions">
-            <button class="btn ghost" id="heroOpenDashboard" data-view-link="dashboard" style="display:none;">Open Dashboard</button>
+            <!-- Dashboard disabled: hide hero button entirely -->
+            <button class="btn ghost" id="heroOpenDashboard" style="display:none;" aria-hidden="true">Open Dashboard</button>
           </div>
         </div>
       </div>
@@ -1278,7 +1278,7 @@
      * Show different views (home, consult, dashboard)
      *************/
     function showView(view){
-      // hide all view areas
+      // hide all view areas (dashboard disabled)
       const homeEl = $('#home-view');
       const consultEl = $('#consult-view');
       const dashEl = $('#dashboard');
@@ -1286,7 +1286,7 @@
       if(homeEl) homeEl.style.display = view === 'home' ? 'block' : 'none';
       document.body.classList.toggle('view-home', view === 'home');
       if(consultEl) consultEl.style.display = view === 'consult' ? 'block' : 'none';
-      if(dashEl) dashEl.style.display = (view === 'dashboard' && userRole === 'official') ? 'block' : 'none';
+      if(dashEl) dashEl.style.display = 'none';
       if(ashaEl) ashaEl.style.display = (view === 'asha' && userRole === 'asha') ? 'block' : 'none';
 
       // update nav active
@@ -1294,8 +1294,8 @@
         a.classList.toggle('active', a.dataset.view === view);
       });
 
-      document.body.classList.toggle('dashboard-view', view === 'dashboard' && userRole === 'official');
-      if(view === 'dashboard' && userRole === 'official'){
+      document.body.classList.toggle('dashboard-view', false);
+      if(false){
         initDashboardFilter();
         initDecisionSelect();
         renderDashboard();
@@ -1339,13 +1339,9 @@
     // nav links
     $all('[data-view-link]').forEach(btn => btn.addEventListener('click', ()=> {
       const dest = btn.dataset.viewLink;
+      if(dest === 'dashboard'){ toast('Dashboard is unavailable.','info'); return; }
       if(dest === 'consult' && userRole !== 'citizen'){
         toast('Please login as Citizen to access e‑Consultation.','info');
-        $('#loginModal').style.display = 'flex';
-        return;
-      }
-      if(dest === 'dashboard' && userRole !== 'official'){
-        toast('Officials only. Please login as Official.','info');
         $('#loginModal').style.display = 'flex';
         return;
       }
@@ -1367,8 +1363,8 @@
       if(userRole === 'asha'){
         showView('asha');
       } else if(userRole === 'official'){
-        showView('dashboard');
-        renderDashboard();
+        toast('Dashboard is unavailable.','info');
+        showView('home');
       } else if(userRole === 'citizen'){
         showView('consult');
         setTimeout(()=> openDrawer(demoAmendments[0]), 260);
@@ -1465,7 +1461,7 @@
       updateUIForRole();
       toast(`Logged in as ${userRole}.`,'success');
       const heroBtnLogin = document.getElementById('heroOpenDashboard');
-      if(heroBtnLogin) heroBtnLogin.style.display = (userRole === 'official') ? 'inline-block' : 'none';
+      if(heroBtnLogin) heroBtnLogin.style.display = 'none';
     });
     if(logoutBtn) logoutBtn.addEventListener('click', ()=>{
       userRole = 'guest';
