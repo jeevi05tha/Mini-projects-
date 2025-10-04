@@ -143,7 +143,7 @@
     }
     .grid{
       display:grid;
-      grid-template-columns: 1fr 380px;
+      grid-template-columns: 1fr 520px;
       gap:18px;
       align-items:start;
     }
@@ -215,14 +215,15 @@
 
     /* Right panel: brief + stats */
     .side{
-      display:flex;
-      flex-direction:column;
-      gap:14px;
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:12px;
     }
     .side .about{
       padding:16px;
       border-radius:10px;
       background: linear-gradient(90deg, rgba(43,127,182,0.06), rgba(43,179,143,0.04));
+      grid-column: 1 / -1;
     }
     .small{
       font-size:13px;
@@ -396,6 +397,7 @@
       .grid{grid-template-columns:1fr}
       .dash-grid{grid-template-columns:1fr}
       .drawer{left:50%; transform:translateX(-50%); right:auto; bottom:12px; top:auto; width:92%}
+      .side{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
