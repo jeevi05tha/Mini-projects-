@@ -311,6 +311,25 @@
       margin-top:20px;
       display:none;
     }
+    /* New MCA dashboard styling (scoped) */
+    #dashboard.card{ background:#0f172a; color:#e2e8f0; border:1px solid #334155; padding:18px; }
+    #mcaDash{ display:flex; flex-direction:column; gap:20px; }
+    #mcaDash .top-row{ display:flex; flex-wrap:wrap; gap:20px; }
+    #mcaDash .card{ background-color:#1e293b; border:1px solid #334155; border-radius:10px; padding:20px; flex:1; min-width:250px; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+    #mcaDash .card h2{ font-size:16px; color:#93c5fd; margin:0 0 10px; }
+    #mcaDash .stats{ display:flex; flex-direction:column; gap:5px; }
+    #mcaDash .positive{ color:#22c55e; }
+    #mcaDash .neutral{ color:#eab308; }
+    #mcaDash .negative{ color:#ef4444; }
+    #mcaDash .chart-container{ flex:1; min-width:300px; text-align:center; }
+    #mcaDash .filter{ display:flex; align-items:center; justify-content:space-between; background-color:#1e293b; padding:15px; border-radius:10px; border:1px solid #334155; }
+    #mcaDash .filter input{ width:60%; padding:8px; border-radius:5px; border:none; outline:none; background-color:#334155; color:#e2e8f0; }
+    #mcaDash .filter button{ background-color:#3b82f6; color:white; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; }
+    #mcaDash .filter button:hover{ background-color:#2563eb; }
+    #mcaDash table{ width:100%; border-collapse:collapse; margin-top:10px; background-color:#1e293b; border-radius:10px; overflow:hidden; border:1px solid #334155; }
+    #mcaDash th, #mcaDash td{ padding:12px 10px; text-align:left; border-bottom:1px solid #334155; }
+    #mcaDash th{ color:#93c5fd; background-color:#0f172a; }
+    #mcaDash tr:hover{ background-color:#334155; }
     .dash-grid{
       display:grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -480,6 +499,7 @@
       <a href="#" class="nav-link active" data-view="home" data-role="all">Home</a>
       <a href="#" class="nav-link" data-view="consult" data-role="citizen">e-Consultation</a>
       <a href="#" class="nav-link" data-view="asha" data-role="asha" style="display:none;">ASHA Field App</a>
+      <a href="#" class="nav-link" data-view="dashboard" data-role="official" style="display:none;">Official Dashboard</a>
     </nav>
 
     <div class="right-actions">
@@ -568,64 +588,37 @@
         </div>
 
         <div id="dashboard" class="card" style="display:none;">
-          <div style="display:flex; gap:12px; align-items:center; justify-content:space-between;">
-            <div>
-              <h2 style="margin:0;">Official Dashboard</h2>
-              <div class="small muted">Overview of submissions and analysis by amendment.</div>
-            </div>
-            <div id="filterInfo" class="small muted" style="display:flex; gap:8px; align-items:center;">
-              <label for="amendmentFilter" class="small" style="font-weight:600;">Filter:</label>
-              <select id="amendmentFilter" class="input" style="width:auto; padding:6px 10px;"></select>
-            </div>
-          </div>
-
-          <div class="small" id="filterBadge" style="margin-top:10px; background:var(--pill); color:var(--accent); display:inline-block; padding:4px 10px; border-radius:999px;"></div>
-
-          <div class="kpis" style="margin-top:12px;">
-            <div class="kpi"><div class="label">Total Comments</div><div class="value" id="kpiTotal">0</div></div>
-            <div class="kpi"><div class="label">Positive %</div><div class="value" id="kpiPos">0%</div></div>
-            <div class="kpi"><div class="label">Neutral %</div><div class="value" id="kpiNeu">0%</div></div>
-            <div class="kpi"><div class="label">Negative %</div><div class="value" id="kpiNeg">0%</div></div>
-          </div>
-
-          <div class="chips" style="margin-top:10px;">
-            <div class="chip" data-chip="all">All</div>
-            <div class="chip" data-chip="positive">Positive</div>
-            <div class="chip" data-chip="neutral">Neutral</div>
-            <div class="chip" data-chip="negative">Negative</div>
-          </div>
-
-          <div class="modern-dashboard wide" style="margin-top:12px;">
+          <div id="mcaDash">
             <div class="top-row">
-              <div class="md-card">
-                <h3>Sentiment Counts</h3>
+              <div class="card">
+                <h2>Sentiment Counts</h2>
                 <div class="stats">
-                  <div class="positive">Positive: <span id="mdPos">0</span></div>
-                  <div class="neutral">Neutral: <span id="mdNeu">0</span></div>
-                  <div class="negative">Negative: <span id="mdNeg">0</span></div>
-                  <div>Total: <span id="mdTotal">0</span></div>
+                  <div class="positive">Positive: 0</div>
+                  <div class="neutral">Neutral: 0</div>
+                  <div class="negative">Negative: 0</div>
+                  <div>Total: 0</div>
                 </div>
               </div>
 
-              <div class="md-card">
-                <h3>Quick Filters</h3>
-                <div class="filterbar">
-                  <input type="text" id="mdFilterInput" placeholder="Search name, comment..." />
-                  <button id="mdClear">Clear</button>
+              <div class="card">
+                <h2>Quick Filters</h2>
+                <div class="filter">
+                  <input type="text" id="filterInput" placeholder="Search name, role, comment..." />
+                  <button id="mcaClear" onclick="clearFilter()">Clear</button>
                 </div>
-                <small style="color:#94a3b8;">Tip: Click a row to expand.</small>
+                <small style="color:#94a3b8;">Tip: Click on truncated cells to view full content.</small>
               </div>
 
-              <div class="md-card">
-                <h3>Sentiment Distribution</h3>
-                <canvas id="mdSentChart"></canvas>
-                <p style="font-size: 13px; color:#94a3b8; margin:6px 0 0;">Positive / Neutral / Negative</p>
+              <div class="card chart-container">
+                <h2>Sentiment Distribution</h2>
+                <canvas id="sentimentChart"></canvas>
+                <p style="font-size: 13px; color:#94a3b8;">Shows Positive / Neutral / Negative split.</p>
               </div>
             </div>
 
-            <div class="md-card" style="margin-top:12px;">
-              <h3>Comments Summary</h3>
-              <table id="mdCommentsTable">
+            <div class="card">
+              <h2>Comments Summary</h2>
+              <table id="commentsTable">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -637,55 +630,6 @@
                 </thead>
                 <tbody></tbody>
               </table>
-            </div>
-          </div>
-            <div class="dash-grid" style="margin-top:12px;">
-            <div>
-              <div class="card" style="padding:14px;">
-                <h3 style="margin:0 0 8px">Keyword Word Cloud</h3>
-                <div id="wordCloud" class="cloud">
-                  <!-- words generated here -->
-                  <div class="muted center">No data yet. Submit a comment to see word cloud.</div>
-                </div>
-              </div>
-
-              <div class="card" style="margin-top:12px; padding:14px;">
-                <h3 style="margin:0 0 8px">Recent Comments (live)</h3>
-                <div id="recentComments" style="display:flex;flex-direction:column;gap:8px;"></div>
-              </div>
-            </div>
-
-            <div>
-              <div class="card" style="padding:14px;">
-                <h3 style="margin:0 0 8px">Sentiment Distribution</h3>
-                <canvas id="sentChart" width="400" height="300"></canvas>
-                <div class="muted center" style="margin-top:8px; font-size:13px;">Positive / Neutral / Negative</div>
-              </div>
-
-              <div class="card" style="margin-top:12px; padding:14px;">
-                <h3 style="margin:0 0 8px">Summary</h3>
-                <div id="summaryText" class="small muted">No analysis yet. Submit comments to generate insights.</div>
-              </div>
-
-              <div id="decisionsCard" class="card" style="margin-top:12px; padding:14px; display:none;">
-                <h3 style="margin:0 0 8px">Decision Notes</h3>
-                <div class="small muted">For officials: add per-amendment notes.</div>
-                <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
-                  <label for="decisionAmendSelect" class="small" style="font-weight:600;">Amendment:</label>
-                  <select id="decisionAmendSelect" class="input" style="width:auto; padding:6px 10px;"></select>
-                </div>
-                <textarea id="decisionNotes" rows="5" class="input" placeholder="Write decision notes..."></textarea>
-                <div style="display:flex; gap:8px; margin-top:8px;">
-                  <button class="btn" id="saveDecisionBtn">Save Notes</button>
-                  <span id="decisionSavedMsg" class="small muted" style="display:none;">Saved</span>
-                </div>
-              </div>
-
-              <div id="decisionsListCard" class="card" style="margin-top:12px; padding:14px; display:none;">
-                <h3 style="margin:0 0 8px">Saved Notes</h3>
-                <div id="decisionsList" class="small muted">No notes yet.</div>
-              </div>
-            </div>
             </div>
           </div>
         </div>
@@ -1079,19 +1023,15 @@
         const statCommentsEl = $('#statComments');
         if (statCommentsEl) statCommentsEl.textContent = commentsStore.length;
 
-        // Set dashboard filter to the current amendment and persist
-        selectedAmendmentId = currentAmendment.id;
-        localStorage.setItem('dashboardFilter', selectedAmendmentId);
-        const selectEl = document.getElementById('amendmentFilter');
-        if(selectEl) selectEl.value = selectedAmendmentId;
-
-        // Navigate to dashboard and render (if role permits)
-        if(userRole === 'official'){
-          showView('dashboard');
-          renderDashboard();
-        } else {
-          toast('Comment submitted for review.','success');
-        }
+      // Navigate to dashboard and render for officials
+      selectedAmendmentId = currentAmendment.id;
+      localStorage.setItem('dashboardFilter', selectedAmendmentId);
+      if(userRole === 'official'){
+        showView('dashboard');
+        renderDashboard();
+      } else {
+        toast('Comment submitted for review.','success');
+      }
       }, 900);
     });
 
@@ -1100,127 +1040,30 @@
      *************/
     let sentChart = null;
     function renderDashboard(){
-      updateFilterBadge();
-
+      // compute filtered comments
       const isAll = selectedAmendmentId === 'all';
       const filtered = isAll ? commentsStore : commentsStore.filter(c => c.amendId === selectedAmendmentId);
 
-      // show recent comments
-      const recent = $('#recentComments');
-      if(recent){
-        recent.innerHTML = '';
-        if(filtered.length === 0){
-          recent.innerHTML = `<div class="muted">No comments for selected filter yet.</div>`;
-        } else {
-          filtered.slice(0,6).forEach(c=>{
-            const d = document.createElement('div');
-            d.style.padding='10px';
-            d.style.borderRadius='8px';
-            d.style.border='1px solid rgba(15,23,42,0.04)';
-            d.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;">
-                            <div style="font-weight:700">${c.name}</div>
-                            <div style="font-size:12px;color:#6b7280">${c.date}</div>
-                          </div>
-                          <div style="margin-top:6px;color:#0f172a">${c.text.slice(0,140)}${c.text.length>140?'...':''}</div>
-                          <div style="margin-top:8px;font-size:13px;color:#475569">Sentiment: <strong>${c.sentiment}</strong>${c.file? ' • File attached' : ''}</div>`;
-            recent.appendChild(d);
-          });
-        }
-      }
-
-      // generate word counts from filtered comments
-      const allText = filtered.map(c=>c.text).join(' ');
-      const stopwords = new Set(['the','and','for','with','that','this','have','will','are','shall','may','also','from','been','was','were','but','not','company','rule','clause','amendment','section','new','draft','provision','into','such','its','thereof','herein','hereby','under','over','per']);
-      const tokens = tokenize(allText).filter(w => w.length>2 && !stopwords.has(w));
-      const counts = {};
-      tokens.forEach(t => { counts[t] = (counts[t]||0)+1 });
-
-      // build word cloud (simple)
-      const cloud = $('#wordCloud');
-      if(cloud){
-        cloud.innerHTML = '';
-        const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,60);
-        if(entries.length === 0){
-          cloud.innerHTML = '<div class="muted center">No keywords for selected filter yet.</div>';
-        } else {
-          const maxCount = entries[0][1];
-          const colors = ['#2bb38f','#2b7fb6','#ec4899','#f59e0b','#10b981','#6366f1','#ef4444'];
-          entries.forEach(([word, cnt], idx) => {
-            const span = document.createElement('span');
-            const size = Math.round(14 + (cnt / maxCount) * 28); // 14px to 42px
-            span.textContent = word;
-            span.className = 'token';
-            span.style.fontSize = size + 'px';
-            span.style.margin = '4px';
-            span.style.background = 'rgba(43,127,182,0.06)';
-            span.style.color = '#0f172a';
-            span.style.border = '1px solid rgba(15,23,42,0.08)';
-            span.style.borderRadius = '8px';
-            span.style.padding = '4px 8px';
-            span.style.cursor = 'pointer';
-            span.title = `${cnt} occurrence${cnt>1?'s':''}`;
-            // color accents
-            const c = colors[idx % colors.length];
-            span.style.boxShadow = `inset 0 0 0 1px ${c}22`;
-            span.style.background = `${c}14`;
-            span.style.color = '#0f172a';
-            span.addEventListener('click', ()=>{
-              span.classList.toggle('active');
-            });
-            cloud.appendChild(span);
-          });
-        }
-      }
-
-      // sentiment distribution
+      // Sentiment counts
       const countsSent = { Positive:0, Neutral:0, Negative:0 };
       filtered.forEach(c => { countsSent[c.sentiment] = (countsSent[c.sentiment]||0)+1 });
+      const totals = countsSent.Positive + countsSent.Neutral + countsSent.Negative;
+      const countsBox = document.querySelector('#mcaDash .stats');
+      if(countsBox){
+        countsBox.innerHTML = `
+          <div class="positive">Positive: ${countsSent.Positive}</div>
+          <div class="neutral">Neutral: ${countsSent.Neutral}</div>
+          <div class="negative">Negative: ${countsSent.Negative}</div>
+          <div>Total: ${totals}</div>
+        `;
+      }
 
-      const total = filtered.length || 1;
-      const posPct = Math.round((countsSent.Positive/total)*100);
-      const neuPct = Math.round((countsSent.Neutral/total)*100);
-      const negPct = Math.round((countsSent.Negative/total)*100);
-
-      // Update KPIs
-      const kpiTotal = document.getElementById('kpiTotal');
-      const kpiPos = document.getElementById('kpiPos');
-      const kpiNeu = document.getElementById('kpiNeu');
-      const kpiNeg = document.getElementById('kpiNeg');
-      if(kpiTotal) kpiTotal.textContent = String(filtered.length);
-      if(kpiPos) kpiPos.textContent = `${posPct}%`;
-      if(kpiNeu) kpiNeu.textContent = `${neuPct}%`;
-      if(kpiNeg) kpiNeg.textContent = `${negPct}%`;
-
-      const ctxEl = document.getElementById('sentChart');
-      if(ctxEl){
+      // Doughnut chart
+      const ctxEl = document.getElementById('sentimentChart');
+      if(ctxEl && window.Chart){
         const ctx = ctxEl.getContext('2d');
         if(sentChart) sentChart.destroy();
         sentChart = new Chart(ctx, {
-          type: 'pie',
-          data: {
-            labels: ['Positive', 'Neutral', 'Negative'],
-            datasets: [{
-              data: [countsSent.Positive, countsSent.Neutral, countsSent.Negative],
-              backgroundColor: ['#2bb38f','#cfeaf2','#ff7a7a'],
-              hoverOffset: 8,
-              borderWidth:0
-            }]
-          },
-          options: {
-            plugins: {
-              legend: { position:'bottom' },
-              tooltip: { callbacks: { label: ctx => `${ctx.label}: ${ctx.parsed} (${Math.round((ctx.parsed/total)*100)}%)` } }
-            }
-          }
-        });
-      }
-
-      // modern dashboard chart
-      const mdCtxEl = document.getElementById('mdSentChart');
-      if(mdCtxEl){
-        const mdCtx = mdCtxEl.getContext('2d');
-        if(window._mdSentChart) window._mdSentChart.destroy();
-        window._mdSentChart = new Chart(mdCtx, {
           type: 'doughnut',
           data: {
             labels: ['Positive', 'Neutral', 'Negative'],
@@ -1230,55 +1073,47 @@
         });
       }
 
-      // summary text (simple heuristics)
-      let summary = 'No clear trend.';
-      const summaryEl = $('#summaryText');
-      if(summaryEl){
-        if(filtered.length){
-          if(posPct >= negPct + 10) summary = `Overall sentiment is positive (${posPct}% positive). Consider fast-tracking the friendly suggestions.`;
-          else if(negPct >= posPct + 10) summary = `Overall sentiment leans negative (${negPct}% negative). Review concerns and consider revisions.`;
-          else summary = `Mixed/neutral response (P:${posPct}% N:${negPct}%). Consider detailed review of top keywords and targeted clarifications.`;
-        } else {
-          summary = 'No comments for selected filter yet.';
-        }
-        summaryEl.textContent = summary;
-      }
-
-      // Decisions panel visibility
-      const decisionsCard = document.getElementById('decisionsCard');
-      if(decisionsCard){
-        decisionsCard.style.display = (userRole === 'official') ? 'block' : 'none';
-      }
-
-      // Populate modern table (Name, Role, Sentiment, Original Comment, Reason)
-      const tableBody = document.querySelector('#mdCommentsTable tbody');
-      if(tableBody){
-        tableBody.innerHTML = '';
-        const rows = filtered.slice(0, 15);
+      // Populate table
+      const tbody = document.querySelector('#commentsTable tbody');
+      if(tbody){
+        tbody.innerHTML = '';
+        const rows = filtered.slice(0, 50);
         rows.forEach(c => {
           const tr = document.createElement('tr');
           const role = c.name && /\b(Expert|General|Deeply affected)\b/i.test(c.name) ? RegExp.$1 : 'General';
-          const reason = c.text.length > 80 ? c.text.slice(0, 80) + '…' : c.text;
+          const reason = c.text.length > 80 ? c.text.slice(0,80)+'…' : c.text;
           tr.innerHTML = `<td>${c.name}</td><td>${role}</td><td class="${c.sentiment.toLowerCase()}">${c.sentiment}</td><td title="${c.text}">${c.text}</td><td title="${reason}">${reason}</td>`;
-          tableBody.appendChild(tr);
+          tbody.appendChild(tr);
         });
-        // counters
-        const mdPos = document.getElementById('mdPos');
-        const mdNeu = document.getElementById('mdNeu');
-        const mdNeg = document.getElementById('mdNeg');
-        const mdTotal = document.getElementById('mdTotal');
-        if(mdPos) mdPos.textContent = String(countsSent.Positive);
-        if(mdNeu) mdNeu.textContent = String(countsSent.Neutral);
-        if(mdNeg) mdNeg.textContent = String(countsSent.Negative);
-        if(mdTotal) mdTotal.textContent = String(filtered.length);
       }
+
+      // Filter binding
+      const filterInput = document.getElementById('filterInput');
+      if(filterInput){
+        filterInput.oninput = filterTable;
+      }
+    }
+
+    function clearFilter(){
+      const input = document.getElementById('filterInput');
+      if(input){ input.value=''; filterTable(); }
+    }
+
+    function filterTable(){
+      const input = document.getElementById('filterInput');
+      const filter = (input && input.value || '').toLowerCase();
+      const rows = document.querySelectorAll('#commentsTable tbody tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+      });
     }
 
     /*************
      * Show different views (home, consult, dashboard)
      *************/
     function showView(view){
-      // hide all view areas (dashboard disabled)
+      // hide all view areas
       const homeEl = $('#home-view');
       const consultEl = $('#consult-view');
       const dashEl = $('#dashboard');
@@ -1286,7 +1121,7 @@
       if(homeEl) homeEl.style.display = view === 'home' ? 'block' : 'none';
       document.body.classList.toggle('view-home', view === 'home');
       if(consultEl) consultEl.style.display = view === 'consult' ? 'block' : 'none';
-      if(dashEl) dashEl.style.display = 'none';
+      if(dashEl) dashEl.style.display = (view === 'dashboard' && userRole === 'official') ? 'block' : 'none';
       if(ashaEl) ashaEl.style.display = (view === 'asha' && userRole === 'asha') ? 'block' : 'none';
 
       // update nav active
@@ -1294,8 +1129,8 @@
         a.classList.toggle('active', a.dataset.view === view);
       });
 
-      document.body.classList.toggle('dashboard-view', false);
-      if(false){
+      document.body.classList.toggle('dashboard-view', view === 'dashboard' && userRole === 'official');
+      if(view === 'dashboard' && userRole === 'official'){
         initDashboardFilter();
         initDecisionSelect();
         renderDashboard();
@@ -1339,9 +1174,13 @@
     // nav links
     $all('[data-view-link]').forEach(btn => btn.addEventListener('click', ()=> {
       const dest = btn.dataset.viewLink;
-      if(dest === 'dashboard'){ toast('Dashboard is unavailable.','info'); return; }
       if(dest === 'consult' && userRole !== 'citizen'){
         toast('Please login as Citizen to access e‑Consultation.','info');
+        $('#loginModal').style.display = 'flex';
+        return;
+      }
+      if(dest === 'dashboard' && userRole !== 'official'){
+        toast('Officials only. Please login as Official.','info');
         $('#loginModal').style.display = 'flex';
         return;
       }
@@ -1363,8 +1202,8 @@
       if(userRole === 'asha'){
         showView('asha');
       } else if(userRole === 'official'){
-        toast('Dashboard is unavailable.','info');
-        showView('home');
+        showView('dashboard');
+        renderDashboard();
       } else if(userRole === 'citizen'){
         showView('consult');
         setTimeout(()=> openDrawer(demoAmendments[0]), 260);
