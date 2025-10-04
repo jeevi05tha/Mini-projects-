@@ -307,15 +307,24 @@
       display:none;
     }
     .dash-grid{
-      display:flex;
+      display:grid;
       gap:12px;
-      align-items:stretch;
-      overflow-x:auto;
-      padding-bottom:6px;
-      -webkit-overflow-scrolling: touch;
+      align-items:start;
+      grid-template-columns: 1.2fr 1.2fr 0.9fr;
     }
     .dash-grid > div{ display: contents; }
-    .dash-grid .card{ flex:0 0 auto; min-width: 440px; }
+    /* Positioning of dashboard cards on laptop/desktop */
+    @media (min-width: 981px){
+      .cloud-card{ grid-column: 1 / span 2; }
+      .recent-card{ grid-column: 1 / span 2; }
+      .sentiment-card{ grid-column: 3; }
+      .summary-card{ grid-column: 3; }
+      .decisions-card{ grid-column: 3; }
+      .decisions-list-card{ grid-column: 3; }
+    }
+    @media (max-width: 980px){
+      .dash-grid{ grid-template-columns: 1fr; }
+    }
     .cloud{
       min-height:360px;
       display:flex;
@@ -405,7 +414,7 @@
     /* responsive */
     @media (max-width:980px){
       .grid{grid-template-columns:1fr}
-      .dash-grid{ flex-direction:column; overflow-x:visible; }
+      .dash-grid{ grid-template-columns: 1fr; }
       .drawer{left:50%; transform:translateX(-50%); right:auto; bottom:12px; top:auto; width:92%}
       .side{ grid-template-columns: 1fr; }
     }
@@ -528,7 +537,7 @@
 
           <div class="dash-grid" style="margin-top:12px;">
             <div>
-              <div class="card" style="padding:14px;">
+              <div class="card cloud-card" style="padding:14px;">
                 <h3 style="margin:0 0 8px">Keyword Word Cloud</h3>
                 <div id="wordCloud" class="cloud">
                   <!-- words generated here -->
@@ -536,25 +545,25 @@
                 </div>
               </div>
 
-              <div class="card" style="margin-top:12px; padding:14px;">
+              <div class="card recent-card" style="margin-top:12px; padding:14px;">
                 <h3 style="margin:0 0 8px">Recent Comments (live)</h3>
                 <div id="recentComments" style="display:flex;flex-direction:column;gap:8px;"></div>
               </div>
             </div>
 
             <div>
-              <div class="card" style="padding:14px;">
+              <div class="card sentiment-card" style="padding:14px;">
                 <h3 style="margin:0 0 8px">Sentiment Distribution</h3>
                 <canvas id="sentChart" width="400" height="300"></canvas>
                 <div class="muted center" style="margin-top:8px; font-size:13px;">Positive / Neutral / Negative</div>
               </div>
 
-              <div class="card" style="margin-top:12px; padding:14px;">
+              <div class="card summary-card" style="margin-top:12px; padding:14px;">
                 <h3 style="margin:0 0 8px">Summary</h3>
                 <div id="summaryText" class="small muted">No analysis yet. Submit comments to generate insights.</div>
               </div>
 
-              <div id="decisionsCard" class="card" style="margin-top:12px; padding:14px; display:none;">
+              <div id="decisionsCard" class="card decisions-card" style="margin-top:12px; padding:14px; display:none;">
                 <h3 style="margin:0 0 8px">Decision Notes</h3>
                 <div class="small muted">For officials: add per-amendment notes.</div>
                 <div style="display:flex; gap:8px; align-items:center; margin-top:8px;">
@@ -568,7 +577,7 @@
                 </div>
               </div>
 
-              <div id="decisionsListCard" class="card" style="margin-top:12px; padding:14px; display:none;">
+              <div id="decisionsListCard" class="card decisions-list-card" style="margin-top:12px; padding:14px; display:none;">
                 <h3 style="margin:0 0 8px">Saved Notes</h3>
                 <div id="decisionsList" class="small muted">No notes yet.</div>
               </div>
