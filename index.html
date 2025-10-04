@@ -634,7 +634,7 @@
 
               <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
                 <label class="small muted" style="display:flex; align-items:center; gap:6px;">
-                  <input type="checkbox" id="useCloudSTT" /> Cloud English (API)
+                  <input type="checkbox" id="useCloudSTT" /> Cloud Whisper (API)
                 </label>
                 <span id="cloudSttStatus" class="small muted">Cloud: Off</span>
               </div>
@@ -644,7 +644,7 @@
                 <div style="display:flex; gap:8px; margin-top:8px;">
                   <button class="btn ghost" id="saveTranscribeCfgBtn">Save API Settings</button>
                 </div>
-                <div class="small muted" style="margin-top:6px;">Expected response: { text_en: "..." } or { text: "..." }</div>
+                <div class="small muted" style="margin-top:6px;">Expected response: { text: "..." } or { text_en: "..." }</div>
               </div>
 
               <div style="margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -1575,14 +1575,25 @@
         if(!cloudCfg.endpoint){ toast('Set Transcribe API endpoint first.','warn'); return; }
         const cloudSttStatus = document.getElementById('cloudSttStatus');
         if(cloudSttStatus) cloudSttStatus.textContent = 'Cloud: Uploading…';
-        // Send base64 payload to API
+        // Send base64 payload to Whisper API (server) — recommended to use multipart/form-data
+        // If your server expects multipart form for Whisper:
+        const form = new FormData();
+        // Convert data URL to Blob
+        const dataUrl = queueItem.audioBase64;
+        const arr = dataUrl.split(',');
+        const mime = arr[0].match(/:(.*?);/)[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length; const u8arr = new Uint8Array(n);
+        while(n--){ u8arr[n] = bstr.charCodeAt(n); }
+        const audioBlob = new Blob([u8arr], { type: mime });
+        form.append('file', audioBlob, 'audio.webm');
+        form.append('response_language', 'en');
         const res = await fetch(cloudCfg.endpoint, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             ...(cloudCfg.apiKey ? { 'Authorization': `Bearer ${cloudCfg.apiKey}` } : {})
           },
-          body: JSON.stringify({ audio_base64: queueItem.audioBase64, target_lang: 'en' })
+          body: form
         });
         if(!res.ok){ throw new Error('Bad response'); }
         const data = await res.json();
